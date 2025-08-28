@@ -4,7 +4,10 @@
 <h3 align="center"><samp>An Upcoming AI/ML Engineer from India</samp></h3>
 
 
-<img align="center" width="1000" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcWZweXRnaHN0M2xreGxubjgwNGNqenNwZXNyczMxbHh4djRyaDNwMyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/CVtNe84hhYF9u/giphy.gif" />
+
+  <img src="214331.gif" width="1000" alt="AI Animation" />
+
+
 <div style="margin-bottom: 20px;"></div>
 
 
