@@ -3,8 +3,11 @@
 <h2 align="center"><samp>Hi there, I'm Sudhanshu Batra</samp></h2>
 <h3 align="center"><samp>An Upcoming AI/ML Engineer from India</samp></h3>
 
-<img align="center" alt="Coding" width="1000" src="https://media.giphy.com/media/RbDKaczqWovIugyJmW/giphy.gif">
+
+<img align="center" width="1000" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcWZweXRnaHN0M2xreGxubjgwNGNqenNwZXNyczMxbHh4djRyaDNwMyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/CVtNe84hhYF9u/giphy.gif" />
 <div style="margin-bottom: 20px;"></div>
+
+
 
 
 <h3 align="center"><samp>Connect</samp></h3>
@@ -33,6 +36,7 @@
     </tr>
   </table>
 </div>
+
 <h3 align="center"><samp>🛠️ Skills & Languages</samp></h3>
 <div style="display: flex; align-items: flex-start; align: center">
   <table align="center">
@@ -73,8 +77,6 @@
         </a>
         <br>HTML
       </td>
-    </tr>
-    <tr>
       <td align="center" width="100">
         <a href="https://www.w3.org/Style/CSS/">
           <img src="https://skillicons.dev/icons?i=css" width="48" height="48" alt="CSS" />
@@ -87,6 +89,8 @@
         </a>
         <br>Git
       </td>
+    </tr>
+    <tr>
       <td align="center" width="100">
         <a href="https://github.com/">
           <img src="https://skillicons.dev/icons?i=github" width="48" height="48" alt="GitHub" />
@@ -100,19 +104,17 @@
         <br>TensorFlow
       </td>
       <td align="center" width="100">
-        <a href="https://pytorch.org/">
-          <img src="https://github.com/pytorch/pytorch/raw/main/docs/source/_static/img/pytorch-logo-dark.png" width="48" height="48" alt="PyTorch" />
-        </a>
-        <br>PyTorch
-      </td>
+  <a href="https://pytorch.org/">
+    <img src="https://skillicons.dev/icons?i=pytorch" width="48" height="48" alt="PyTorch" />
+  </a>
+  <br>PyTorch
+</td>
       <td align="center" width="100">
         <a href="https://keras.io/">
           <img src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Keras_logo.svg" width="48" height="48" alt="Keras" />
         </a>
         <br>Keras
       </td>
-    </tr>
-    <tr>
       <td align="center" width="100">
         <a href="https://scikit-learn.org/">
           <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Scikit_learn_logo_small.svg" width="48" height="48" alt="Scikit-learn" />
@@ -137,75 +139,81 @@
         </a>
         <br>Google Colab
       </td>
+    </tr>
+    <tr>
       <td align="center" width="100">
-        <a href="https://www.anaconda.com/">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/e/ea/Anaconda_Navigator_logo.png" width="48" height="48" alt="Anaconda" />
-        </a>
-        <br>Anaconda
-      </td>
+  <a href="https://www.anaconda.com/">
+    <img src="https://skillicons.dev/icons?i=anaconda" width="48" height="48" alt="Anaconda" />
+  </a>
+  <br>Anaconda
+</td>
       <td align="center" width="100">
         <a href="https://www.mysql.com/">
           <img src="https://skillicons.dev/icons?i=mysql" width="48" height="48" alt="MySQL" />
         </a>
         <br>MySQL
       </td>
-    </tr>
-    <tr>
       <td align="center" width="100">
-        <a href="https://www.postgresql.org/">
-          <img src="https://skillicons.dev/icons?i=postgresql" width="48" height="48" alt="PostgreSQL" />
+        <a href="https://react.dev/">
+          <img src="https://skillicons.dev/icons?i=react" width="48" height="48" alt="React" />
         </a>
-        <br>PostgreSQL
+        <br>React
       </td>
       <td align="center" width="100">
-        <a href="https://www.mongodb.com/">
-          <img src="https://skillicons.dev/icons?i=mongodb" width="48" height="48" alt="MongoDB" />
+        <a href="https://nodejs.org/">
+          <img src="https://skillicons.dev/icons?i=nodejs" width="48" height="48" alt="Node.js" />
         </a>
-        <br>MongoDB
+        <br>Node.js
       </td>
       <td align="center" width="100">
-        <a href="https://www.sqlite.org/">
-          <img src="https://skillicons.dev/icons?i=sqlite" width="48" height="48" alt="SQLite" />
+        <a href="https://expressjs.com/">
+          <img src="https://skillicons.dev/icons?i=express" width="48" height="48" alt="Express.js" />
         </a>
-        <br>SQLite
+        <br>Express.js
       </td>
       <td align="center" width="100">
-        <a href="https://www.docker.com/">
-          <img src="https://skillicons.dev/icons?i=docker" width="48" height="48" alt="Docker" />
+        <a href="https://tailwindcss.com/">
+          <img src="https://skillicons.dev/icons?i=tailwind" width="48" height="48" alt="Tailwind" />
         </a>
-        <br>Docker
+        <br>Tailwind
       </td>
       <td align="center" width="100">
-        <a href="https://kubernetes.io/">
-          <img src="https://skillicons.dev/icons?i=kubernetes" width="48" height="48" alt="Kubernetes" />
+        <a href="https://getbootstrap.com/">
+          <img src="https://skillicons.dev/icons?i=bootstrap" width="48" height="48" alt="Bootstrap" />
         </a>
-        <br>Kubernetes
+        <br>Bootstrap
       </td>
       <td align="center" width="100">
-        <a href="https://aws.amazon.com/">
-          <img src="https://skillicons.dev/icons?i=aws" width="48" height="48" alt="AWS" />
+        <a href="https://firebase.google.com/">
+          <img src="https://skillicons.dev/icons?i=firebase" width="48" height="48" alt="Firebase" />
         </a>
-        <br>AWS
+        <br>Firebase
       </td>
     </tr>
     <tr>
       <td align="center" width="100">
-        <a href="https://azure.microsoft.com/">
-          <img src="https://skillicons.dev/icons?i=azure" width="48" height="48" alt="Azure" />
+        <a href="https://vercel.com/">
+          <img src="https://skillicons.dev/icons?i=vercel" width="48" height="48" alt="Vercel" />
         </a>
-        <br>Azure
+        <br>Vercel
       </td>
       <td align="center" width="100">
-        <a href="https://cloud.google.com/">
-          <img src="https://skillicons.dev/icons?i=gcp" width="48" height="48" alt="Google Cloud" />
+        <a href="https://www.netlify.com/">
+          <img src="https://skillicons.dev/icons?i=netlify" width="48" height="48" alt="Netlify" />
         </a>
-        <br>GCP
+        <br>Netlify
       </td>
       <td align="center" width="100">
-        <a href="https://www.linux.org/">
-          <img src="https://skillicons.dev/icons?i=linux" width="48" height="48" alt="Linux" />
+        <a href="https://www.r-project.org/">
+          <img src="https://skillicons.dev/icons?i=r" width="48" height="48" alt="R" />
         </a>
-        <br>Linux
+        <br>R
+      </td>
+      <td align="center" width="100">
+        <a href="https://www.shellscript.sh/">
+          <img src="https://skillicons.dev/icons?i=bash" width="48" height="48" alt="Shell Script" />
+        </a>
+        <br>Shell Script
       </td>
       <td align="center" width="100">
         <a href="https://www.ubuntu.com/">
@@ -214,10 +222,16 @@
         <br>Ubuntu
       </td>
       <td align="center" width="100">
-        <a href="https://www.vim.org/">
-          <img src="https://skillicons.dev/icons?i=vim" width="48" height="48" alt="Vim" />
+        <a href="https://www.microsoft.com/windows/">
+          <img src="https://skillicons.dev/icons?i=windows" width="48" height="48" alt="Windows" />
         </a>
-        <br>Vim
+        <br>Windows
+      </td>
+      <td align="center" width="100">
+        <a href="https://www.figma.com/">
+          <img src="https://skillicons.dev/icons?i=figma" width="48" height="48" alt="Figma" />
+        </a>
+        <br>Figma
       </td>
       <td align="center" width="100">
         <a href="https://code.visualstudio.com/">
