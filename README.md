@@ -12,28 +12,35 @@
 
 
 
-
-<h3 align="center"><samp>Connect</samp></h3>
-
-<div style="display: flex; align-items: flex-start; align: center">
+<h3 align="center"><samp>Connect</samp></h3>S
+<div style="display: flex; align-items: flex-start;" align="center">
   <table align="center">
     <tr>
       <td align="center" width="100">
-        <a href="https://www.linkedin.com/in/sudhanshu-batra/">
-          <img src="https://skillicons.dev/icons?i=linkedin" alt="icon" width="45" height="45" />
+        <a href="https://www.linkedin.com/in/sudhanshu-batra/" target="_blank">
+          <img src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn" width="45" height="45" />
           <br>LinkedIn
         </a>
       </td>
+
       <td align="center" width="100">
-        <a href="https://github.com/Sudhanshub27">
-          <img src="https://skillicons.dev/icons?i=github" width="45" height="45" alt="GitHub" />
+        <a href="https://github.com/Sudhanshub27" target="_blank">
+          <img src="https://skillicons.dev/icons?i=github" alt="GitHub" width="45" height="45" />
           <br>GitHub
         </a>
       </td>
+
       <td align="center" width="100">
-        <a href="https://www.instagram.com/batra_sudhanshu/">
-          <img src="https://skillicons.dev/icons?i=instagram" alt="icon" width="45" height="45" />
+        <a href="https://www.instagram.com/batra_sudhanshu/" target="_blank">
+          <img src="https://skillicons.dev/icons?i=instagram" alt="Instagram" width="45" height="45" />
           <br>Instagram
+        </a>
+      </td>
+
+      <td align="center" width="100">
+        <a href="https://www.sudhanshubatra.in" target="_blank">
+          <img src="https://img.icons8.com/fluency/48/domain.png" alt="Portfolio" width="45" height="45" />
+          <br>Portfolio
         </a>
       </td>
     </tr>
