@@ -1,7 +1,7 @@
 <h1 align="center"><samp>🤖 Learn  🔬 Train  🚀 Deploy</samp></h1>
 
 <h2 align="center"><samp>Hi there, I'm Sudhanshu Batra</samp></h2>
-<h3 align="center"><samp>An Upcoming AI/ML Engineer from India</samp></h3>
+<h3 align="center"><samp>Full Stack + AI/ML Engineer from India</samp></h3>
 
 
 
