@@ -17,12 +17,12 @@ WIDGET_BOTTOM_PAD = 20
 
 THEMES = {
     'dark_mode.svg': dict(
-        bg='#17121C', card_bg='#211A26', border='#4A3040',
+        bg='#17121C', card_bg='#17121C', border='#4A3040',
         hdr='#F5E6D3', label='#C9A896', val='#E8CBB0',
         subtext='#C9A896', sep='#5A4A52', add='#C85A3D', dele='#7A2E1F'
     ),
     'light_mode.svg': dict(
-        bg='#FAF5F0', card_bg='#F2E8E0', border='#D8C2D3',
+        bg='#FAF5F0', card_bg='#FAF5F0', border='#D8C2D3',
         hdr='#4A3040', label='#8C6D58', val='#A85A3D',
         subtext='#8C6D58', sep='#C4B0C2', add='#C85A3D', dele='#7A2E1F'
     ),
@@ -77,19 +77,19 @@ def build(theme_file):
     cards_data = [
         ('ABOUT', 0, 0, [
             ('OS', 'Linux, Windows 11', None),
-            ('Uptime', uptime(), 'age_data'),
-            ('Host', 'VIT University, Vellore', None),
-            ('Kernel', 'Full Stack Software Developer', None),
-            ('IDE', 'VS Code, Antigravity', None),
+            ('Growing since', uptime(), 'age_data'),
+            ('Rooted at', 'VIT University, Vellore', None),
+            ('Core', 'Full Stack Software Developer', None),
+            ('Tools', 'VS Code, Antigravity', None),
         ]),
         ('LANGUAGES', 1, 0, [
-            ('Programming', 'TypeScript, JavaScript, Python', None),
-            ('Computer', 'HTML, CSS, React, Next.js, Node.js, SQL', None),
-            ('Real', 'English, Hindi, Punjabi', None),
+            ('Code', 'TypeScript, JavaScript, Python', None),
+            ('Web', 'HTML, CSS, React, Next.js, Node.js, SQL', None),
+            ('Speak', 'English, Hindi, Punjabi', None),
         ]),
-        ('HOBBIES', 0, 1, [
-            ('Software', 'Building products, AI experiments', None),
-            ('Hardware', 'Gaming, Cricket', None),
+        ('INTERESTS', 0, 1, [
+            ('Tends to', 'Building products, AI experiments', None),
+            ('Wanders into', 'Gaming, Cricket', None),
         ]),
         ('CONTACT', 1, 1, [
             ('Email', 'sudhanshubatra27@gmail.com', None),
