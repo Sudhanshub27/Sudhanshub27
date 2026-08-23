@@ -30,13 +30,17 @@ BOX_ROW_H = 94
 # with contribution count -- the same ratio height uses, so two bars of similar
 # height always land on similar color, not just similar count. low/high are GitHub's
 # own level-1/level-4 greens, so the gradient stays a true green, not lime.
+import math
+
 WIDGET_THEMES = {
     'dark_mode.svg': dict(
-        fg='#F8FAFC', label='#94A3B8', accent='#3B82F6', border='#1E293B', bg='#0B1020',
-        empty='#151D33', low='#10B981', high='#3B82F6'),
+        fg='#F5E6D3', label='#C9A896', accent='#C85A3D', border='#4A3040', bg='#17121C',
+        empty='#4A3E4F', low='#F5D6B8', high='#7A2E1F', trunk='#5A4A52', path='#2B2032',
+        ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
     'light_mode.svg': dict(
-        fg='#24292f', label='#57606a', accent='#216e39', border='#d0d7de', bg='#f6f8fa',
-        empty='#efece0', low='#9be9a8', high='#216e39'),
+        fg='#4A3040', label='#8C6D58', accent='#C85A3D', border='#D8C2D3', bg='#FAF5F0',
+        empty='#C4B0C2', low='#F5D6B8', high='#7A2E1F', trunk='#6B5963', path='#F0E5EF',
+        ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
 }
 
 
@@ -80,50 +84,146 @@ def shade(hex_color, factor):
 
 
 def render_chart(weeks, theme, tile_w, tile_h):
-    """Renders the calendar as an isometric grid of extruded tiles, one per day.
+    """Renders the calendar as a Sakura forest along an S-curve switchback path.
 
-    Height and color are driven by the exact same ratio (count / busiest day), so two
-    bars of similar height always land on similar color instead of jumping between a
-    handful of banded shades. Tiles are painted back-to-front (by col+row) so nearer
-    bars correctly occlude the ones behind them.
+    Days are distributed in chronological order along a winding sine-wave path.
+    Empty days render as faint gray-purple path dots. Contribution days render as trees
+    with thin trunks, branch lines, and multi-layered organic sakura blossom canopies.
     """
-    min_h, max_h = max(2.0, tile_w * 0.1), tile_w * MAX_H_RATIO
     all_days = [d for w in weeks for d in w['contributionDays']]
+    N = len(all_days)
+    if N == 0:
+        return '<g></g>', 0, 0
+
     max_count = max((d['contributionCount'] for d in all_days), default=1) or 1
+    ramp = theme.get('ramp', ['#FFB6C1', '#F472B6', '#E91E63', '#BE185D'])
+    trunk_color = theme.get('trunk', '#5A4A52')
+    path_color = theme.get('path', '#271F30')
 
-    def bar_height(c):
-        return min_h if c == 0 else min_h + (max_h - min_h) * (c / max_count)
+    # Path geometry parameters
+    chart_w = tile_w * 26.0
+    amplitude = 42.0
+    frequency = 2 * math.pi * 2.5
+    center_y = 100.0
 
-    def color_for(c):
-        return theme['empty'] if c == 0 else lerp_color(theme['low'], theme['high'], c / max_count)
+    # 1. Calculate path points and roadside positions
+    path_line_pts = []
+    day_nodes = []
+    for i, d in enumerate(all_days):
+        t = i / max(1, N - 1)
+        x_base = t * chart_w
+        y_base = center_y + amplitude * math.sin(t * frequency)
+        path_line_pts.append((x_base, y_base))
 
-    def iso_n(col, row):
-        return (col - row) * (tile_w / 2), (col + row) * (tile_h / 2)
+        # Perpendicular normal vector for roadside jitter
+        dx = chart_w / max(1, N - 1)
+        dy = amplitude * frequency * math.cos(t * frequency) / max(1, N - 1)
+        len_v = math.hypot(dx, dy) or 1.0
+        nx, ny = -dy / len_v, dx / len_v
 
-    tiles = [(col, d['weekday'], d) for col, week in enumerate(weeks) for d in week['contributionDays']]
-    tiles.sort(key=lambda t: t[0] + t[1])  # back-to-front paint order
+        # Deterministic roadside jitter
+        jitter = (math.sin(i * 12.9898 + 78.233) * 0.5 + math.cos(i * 45.123) * 0.5) * 14.0
+        pos_x = x_base + nx * jitter
+        pos_y = y_base + ny * jitter
+        day_nodes.append({'index': i, 'day': d, 'pos_x': pos_x, 'pos_y': pos_y, 'y_base': y_base})
 
     parts = []
     minx = miny = float('inf')
     maxx = maxy = float('-inf')
-    for col, row, d in tiles:
-        nx, ny = iso_n(col, row)
-        h = bar_height(d['contributionCount'])
-        color = color_for(d['contributionCount'])
-        ty = ny - h
-        N, E, S, W = (nx, ty - tile_h / 2), (nx + tile_w / 2, ty), (nx, ty + tile_h / 2), (nx - tile_w / 2, ty)
-        Sg, Eg, Wg = (nx, ny + tile_h / 2), (nx + tile_w / 2, ny), (nx - tile_w / 2, ny)
 
-        def pts(*p):
-            return ' '.join(f'{x:.1f},{y:.1f}' for x, y in p)
-        if h > min_h + 0.5:
-            left_c, right_c = shade(color, 0.8), shade(color, 0.62)
-            parts.append(f'<polygon points="{pts(W,S,Sg,Wg)}" fill="{left_c}" stroke="{left_c}" stroke-width="0.5"/>')
-            parts.append(f'<polygon points="{pts(E,S,Sg,Eg)}" fill="{right_c}" stroke="{right_c}" stroke-width="0.5"/>')
-        parts.append(f'<polygon points="{pts(N,E,S,W)}" fill="{color}" stroke="{color}" stroke-width="0.5"/>')
-        for px, py in (N, E, S, W, Sg, Eg, Wg):
-            minx, maxx = min(minx, px), max(maxx, px)
-            miny, maxy = min(miny, py), max(maxy, py)
+    # 2. Draw the winding mountain road line
+    if path_line_pts:
+        d_str = "M " + " L ".join(f"{px:.1f},{py:.1f}" for px, py in path_line_pts)
+        parts.append(f'<path d="{d_str}" stroke="{path_color}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.65"/>')
+        parts.append(f'<path d="{d_str}" stroke="{theme["border"]}" stroke-width="1.2" stroke-dasharray="3,4" fill="none" opacity="0.35"/>')
+        for px, py in path_line_pts:
+            minx, maxx = min(minx, px - 6), max(maxx, px + 6)
+            miny, maxy = min(miny, py - 6), max(maxy, py + 6)
+
+    # 3. Sort trees back-to-front by vertical position (pos_y) for proper occlusion
+    day_nodes.sort(key=lambda item: item['pos_y'])
+
+    # 4. Render day nodes (faint path dots or sakura trees)
+    min_trunk_h, max_trunk_h = 10.0, 28.0
+    min_canopy_r, max_canopy_r = 7.0, 18.0
+
+    for item in day_nodes:
+        i = item['index']
+        d = item['day']
+        px, py = item['pos_x'], item['pos_y']
+        c = d['contributionCount']
+
+        if c == 0:
+            # Empty day: small faint dot on path
+            parts.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="1.5" fill="{theme["empty"]}" opacity="0.75"/>')
+            minx, maxx = min(minx, px - 2), max(maxx, px + 2)
+            miny, maxy = min(miny, py - 2), max(maxy, py + 2)
+        else:
+            ratio = (c / max_count) ** 0.65
+            trunk_h = min_trunk_h + (max_trunk_h - min_trunk_h) * ratio
+            canopy_r = min_canopy_r + (max_canopy_r - min_canopy_r) * ratio
+            trunk_w = max(1.2, 1.0 + ratio * 1.0)
+            branch_len = trunk_h * 0.28
+
+            # Trunk top
+            tx, ty = px, py - trunk_h
+
+            # Thin trunk line
+            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w:.1f}" stroke-linecap="round"/>')
+
+            # 2-3 short branch lines
+            b1_y = py - trunk_h * 0.45
+            parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - branch_len*0.8:.1f}" y2="{b1_y - branch_len*0.5:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w*0.7:.1f}" stroke-linecap="round"/>')
+            b2_y = py - trunk_h * 0.65
+            parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + branch_len*0.7:.1f}" y2="{b2_y - branch_len*0.4:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w*0.7:.1f}" stroke-linecap="round"/>')
+            if ratio >= 0.4:
+                b3_y = py - trunk_h * 0.80
+                parts.append(f'<line x1="{px:.1f}" y1="{b3_y:.1f}" x2="{px - branch_len*0.6:.1f}" y2="{b3_y - branch_len*0.3:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w*0.6:.1f}" stroke-linecap="round"/>')
+
+            # Fluffy Sakura Canopy: 8-9 outer ring circles + 4 inner core circles
+            cx, cy = tx, ty - canopy_r * 0.2
+            R = canopy_r
+            base_tier = min(3, int(ratio * 3.99))
+
+            # Outer ring circles (8-9 circles arranged in a rough ring around offset center)
+            n_outer = 8
+            for k in range(n_outer):
+                angle = (2 * math.pi * k / n_outer) + math.sin(k * 3.7 + i) * 0.35
+                dist = R * (0.55 + math.sin(k * 2.5 + i * 1.7) * 0.20)
+                ox = cx + dist * math.cos(angle)
+                oy = cy + dist * math.sin(angle)
+                orad = R * (0.36 + math.cos(k * 1.9 + i) * 0.10)
+
+                # Shade selection across 4-step ramp
+                shade_idx = base_tier if oy >= cy else max(0, base_tier - 1)
+                if k % 3 == 0:
+                    shade_idx = min(3, base_tier + 1)
+                color = ramp[shade_idx]
+                parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color}" opacity="0.90"/>')
+
+            # Inner core cluster (4 smaller circles for volume and depth)
+            core_offsets = [
+                (-R * 0.15, -R * 0.10, R * 0.38, ramp[base_tier]),
+                (R * 0.12, -R * 0.22, R * 0.35, ramp[max(0, base_tier - 1)]),
+                (-R * 0.08, R * 0.12, R * 0.32, ramp[min(3, base_tier + 1)]),
+                (R * 0.18, R * 0.05, R * 0.30, ramp[base_tier]),
+            ]
+            for dx_c, dy_c, r_c, color_c in core_offsets:
+                parts.append(f'<circle cx="{cx + dx_c:.1f}" cy="{cy + dy_c:.1f}" r="{r_c:.1f}" fill="{color_c}" opacity="0.95"/>')
+
+            # Floating petals for top ~20% high-contribution days
+            if ratio >= 0.75:
+                p_color = ramp[0]  # Light blush pink
+                p1_x, p1_y = cx + R * 0.7, cy - R * 1.1
+                p2_x, p2_y = cx - R * 0.8, cy - R * 0.9
+                p3_x, p3_y = cx + R * 1.1, cy - R * 0.4
+                parts.append(f'<circle cx="{p1_x:.1f}" cy="{p1_y:.1f}" r="1.1" fill="{p_color}" opacity="0.85"/>')
+                parts.append(f'<circle cx="{p2_x:.1f}" cy="{p2_y:.1f}" r="0.9" fill="{p_color}" opacity="0.75"/>')
+                parts.append(f'<circle cx="{p3_x:.1f}" cy="{p3_y:.1f}" r="1.0" fill="{p_color}" opacity="0.65"/>')
+
+            # Bounds tracking
+            minx, maxx = min(minx, cx - R * 1.3), max(maxx, cx + R * 1.3)
+            miny, maxy = min(miny, cy - R * 1.3), max(maxy, py)
 
     frag = f'<g transform="translate({-minx:.1f},{-miny:.1f})">' + ''.join(parts) + '</g>'
     return frag, maxx - minx, maxy - miny
@@ -219,7 +319,7 @@ def render_widget(theme, card_width, weeks):
     parts.append(f'<g transform="translate({contrib_x:.1f},0)">{contrib_markup}</g>')
     avg_y = contrib_y + contrib_h + 15
     parts.append(f'<text x="{avail_w-INSET:.1f}" y="{avg_y:.1f}" font-size="11" fill="{theme["fg"]}" text-anchor="end">'
-                 f'Average: <tspan font-weight="700" fill="{theme["accent"]}">{avg_per_day:.2f}</tspan> / day</text>')
+                 f'Average: {avg_per_day:.2f} / day</text>')
 
     streak_markup, streak_w, streak_h = stat_card(INSET, 0, 'Streaks', [
         (f'{stats["longest_len"]} days', 'Longest',

@@ -1,70 +1,41 @@
 """Generate dark_mode.svg / light_mode.svg for Sudhanshub27's profile README.
 
 Run once to lay out the card. today.py then patches only the id-tagged values daily.
-
-The left panel is the portrait, embedded as a base64 JPEG and blended into the card
-background; the right panel is the neofetch-style info block.
 """
 import datetime
 from xml.sax.saxutils import escape
-import base64
-import io
-from PIL import Image
-import numpy as np
 from dateutil import relativedelta
 
 import build_contrib
 
 IMG_X, IMG_Y = 25, 28
-INFO_W, INFO_FS, LH = 64, 16, 20     # info column: chars per line, font size, line height
-INFO_SLACK = 3
-ADV = 0.5995                         # ConsolasFallback advance, in em
-CARD_H = 530                         # height of the neofetch card itself
-
-# Below the card sits the activity widget (isometric contribution chart + streak
-# stats), rendered fresh by today.py on every run. Its layout constants live in
-# build_contrib.py so both scripts size it identically -- this script only reserves
-# the canvas space, today.py fills it. H is set further down, once compute_card_width
-# is defined.
-WIDGET_GAP = 25                      # gap between the card and the widget
+INFO_FS = 12
+CHAR_W = 7.2                          # ConsolasFallback character advance at 12px
+CARD_H = 460                         # height of the boxed-sections header + grid
+WIDGET_GAP = 25                      # gap between the card grid and the widget
 WIDGET_BOTTOM_PAD = 20
 
 THEMES = {
     'dark_mode.svg': dict(
-        invert=False, bg='#0B1020', fg='#F8FAFC', handle='#3B82F6', rule='#8B5CF6', cc='#94A3B8',
-        sys_k='#06B6D4', sys_v='#F59E0B',
-        lang_k='#8B5CF6', lang_v='#10B981',
-        hob_k='#EC4899', hob_v='#3B82F6',
-        con_k='#10B981', con_v='#06B6D4',
-        stat_k='#3B82F6', stat_v='#F8FAFC',
-        add='#10B981', dele='#EC4899'
+        bg='#17121C', card_bg='#211A26', border='#4A3040',
+        hdr='#F5E6D3', label='#C9A896', val='#E8CBB0',
+        subtext='#C9A896', sep='#5A4A52', add='#C85A3D', dele='#7A2E1F'
     ),
     'light_mode.svg': dict(
-        invert=True, bg='#f6f8fa', fg='#24292f', handle='#0969da', rule='#8250df', cc='#57606a',
-        sys_k='#0969da', sys_v='#bf8700',
-        lang_k='#8250df', lang_v='#1a7f37',
-        hob_k='#cf222e', hob_v='#0969da',
-        con_k='#1a7f37', con_v='#0969da',
-        stat_k='#0969da', stat_v='#24292f',
-        add='#1a7f37', dele='#cf222e'
+        bg='#FAF5F0', card_bg='#F2E8E0', border='#D8C2D3',
+        hdr='#4A3040', label='#8C6D58', val='#A85A3D',
+        subtext='#8C6D58', sep='#C4B0C2', add='#C85A3D', dele='#7A2E1F'
     ),
 }
 
 
-# ---------------------------------------------------------------- info panel
-def panel_width():
-    return 0
-
-
 def compute_card_width():
-    info_x = IMG_X
-    return int(round(info_x + (INFO_W + INFO_SLACK) * INFO_FS * ADV)) + IMG_X
+    return 870
 
 
 H = CARD_H + WIDGET_GAP + build_contrib.panel_height(compute_card_width()) + WIDGET_BOTTOM_PAD
 
 
-# ---------------------------------------------------------------- info rows
 def uptime(birth=datetime.date(2004, 9, 27), today=None):
     today = today or datetime.date.today()
     d = relativedelta.relativedelta(today, birth)
@@ -72,50 +43,8 @@ def uptime(birth=datetime.date(2004, 9, 27), today=None):
     return f"{p(d.years,'year')}, {p(d.months,'month')}, {p(d.days,'day')}"
 
 
-ROWS_DATA = [
-    ('OS',                    'Linux, Windows 11',                   None),
-    ('Uptime',                uptime(),                                     'age_data'),
-    ('Host',                  'VIT University, Vellore',                    None),
-    ('Kernel',                'Full Stack Software Developer',              None),
-    ('IDE',                   'VS Code, Antigravity',                             None),
-    (None, None, None),
-    ('Languages.Programming', 'TypeScript, JavaScript, Python',  None),
-    ('Languages.Computer',    'HTML, CSS, React, Next.js, Node.js, SQL',    None),
-    ('Languages.Real',        'English, Hindi, Punjabi',                       None),
-    (None, None, None),
-    ('Hobbies.Software',      'Building products, AI experiments',          None),
-    ('Hobbies.Hardware',      'Gaming, Cricket',                            None),
-]
-CONTACT = [
-    ('Email',     'sudhanshubatra27@gmail.com'),
-    ('LinkedIn',  'sudhanshu-batra'),
-    ('Instagram', 'batra_sudhanshu'),
-    ('Portfolio', 'sudhanshubatra.in'),
-]
-
-
-def kv(x, y, key, value, key_clr, val_clr, vid=None, cc_clr='#94A3B8'):
-    """`. Key: ....... value`, padded so the whole line is INFO_W chars."""
-    keytxt = '.'.join(f'<tspan fill="{key_clr}">{escape(p)}</tspan>' for p in key.split('.'))
-    dots = max(3, INFO_W - len(f'. {key}:{value}') - 2)
-    idattr = f' id="{vid}"' if vid else ''
-    dotid = f' id="{vid}_dots"' if vid else ''
-    return (f'<tspan x="{x}" y="{y}" fill="{cc_clr}">. </tspan>{keytxt}:'
-            f'<tspan fill="{cc_clr}"{dotid}> {"." * dots} </tspan>'
-            f'<tspan fill="{val_clr}"{idattr}>{escape(value)}</tspan>')
-
-
-def rule(x, y, label, rule_clr, cc_clr='#94A3B8'):
-    return f'<tspan x="{x}" y="{y}" fill="{rule_clr}">{escape(label)}</tspan> <tspan fill="{cc_clr}">-{"—" * (INFO_W - len(label) - 5)}-—-</tspan>'
-
-
-def blank(x, y, cc_clr='#94A3B8'):
-    return f'<tspan x="{x}" y="{y}" fill="{cc_clr}">. </tspan>'
-
-
 def build(theme_file):
     t = THEMES[theme_file]
-    info_x = IMG_X
     W = compute_card_width()
     out = [
         "<?xml version='1.0' encoding='UTF-8'?>",
@@ -129,75 +58,85 @@ def build(theme_file):
         '-webkit-size-adjust: 109%;',
         'size-adjust: 109%;',
         '}',
-        f'.addColor {{fill: {t["add"]};}}',
-        f'.delColor {{fill: {t["dele"]};}}',
-        'text, tspan {{white-space: pre;}}',
+        'text {white-space: pre;}',
         '</style>',
         f'<rect width="{W}px" height="{H}px" fill="{t["bg"]}" rx="15"/>',
     ]
 
-    out.append(f'<text x="{info_x}" y="30">')
-    y = 30
-    handle = '@Sudhanshub27'
-    out.append(f'<tspan x="{info_x}" y="{y}" fill="{t["handle"]}">{handle}</tspan> <tspan fill="{t["cc"]}">-{"—" * (INFO_W - len(handle) - 5)}-—-</tspan>')
+    # --- Header Row
+    out.append(f'<text x="25" y="36" font-size="18" font-weight="700" fill="{t["hdr"]}">@Sudhanshub27</text>')
+    out.append(f'<text x="175" y="36" font-size="13" font-weight="400" fill="{t["label"]}">• Full Stack Software Developer</text>')
+    out.append(f'<text x="25" y="56" font-size="12" fill="{t["subtext"]}">VIT University, Vellore • India</text>')
 
-    # 1. System Info
-    for key, val, vid in ROWS_DATA[0:5]:
-        y += LH
-        out.append(kv(info_x, y, key, val, t['sys_k'], t['sys_v'], vid, t['cc']))
+    # --- 2x2 Grid of Cards
+    grid_y = 75
+    gap_x, gap_y = 20, 18
+    card_w = int((W - 50 - gap_x) / 2)  # 400px
+    card_h = 172
 
-    y += LH; out.append(blank(info_x, y, t['cc']))
+    cards_data = [
+        ('ABOUT', 0, 0, [
+            ('OS', 'Linux, Windows 11', None),
+            ('Uptime', uptime(), 'age_data'),
+            ('Host', 'VIT University, Vellore', None),
+            ('Kernel', 'Full Stack Software Developer', None),
+            ('IDE', 'VS Code, Antigravity', None),
+        ]),
+        ('LANGUAGES', 1, 0, [
+            ('Programming', 'TypeScript, JavaScript, Python', None),
+            ('Computer', 'HTML, CSS, React, Next.js, Node.js, SQL', None),
+            ('Real', 'English, Hindi, Punjabi', None),
+        ]),
+        ('HOBBIES', 0, 1, [
+            ('Software', 'Building products, AI experiments', None),
+            ('Hardware', 'Gaming, Cricket', None),
+        ]),
+        ('CONTACT', 1, 1, [
+            ('Email', 'sudhanshubatra27@gmail.com', None),
+            ('LinkedIn', 'sudhanshu-batra', None),
+            ('Instagram', 'batra_sudhanshu', None),
+            ('Portfolio', 'sudhanshubatra.in', None),
+        ]),
+    ]
 
-    # 2. Languages
-    for key, val, vid in ROWS_DATA[6:9]:
-        y += LH
-        out.append(kv(info_x, y, key, val, t['lang_k'], t['lang_v'], vid, t['cc']))
+    for title, col, row, items in cards_data:
+        cx = 25 + col * (card_w + gap_x)
+        cy = grid_y + row * (card_h + gap_y)
 
-    y += LH; out.append(blank(info_x, y, t['cc']))
+        # Rounded card container
+        out.append(
+            f'<rect x="{cx}" y="{cy}" width="{card_w}" height="{card_h}" rx="8" '
+            f'fill="{t["card_bg"]}" stroke="{t["border"]}" stroke-width="1.2"/>'
+        )
 
-    # 3. Hobbies
-    for key, val, vid in ROWS_DATA[10:12]:
-        y += LH
-        out.append(kv(info_x, y, key, val, t['hob_k'], t['hob_v'], vid, t['cc']))
+        # Card Title Header
+        out.append(
+            f'<text x="{cx + 18}" y="{cy + 26}" font-size="11" font-weight="700" '
+            f'letter-spacing="1.5" fill="{t["hdr"]}">{title}</text>'
+        )
 
-    y += LH; out.append(blank(info_x, y, t['cc']))
-    y += LH; out.append(rule(info_x, y, '- Contact', t['rule'], t['cc']))
+        # Header divider line
+        out.append(
+            f'<line x1="{cx + 18}" y1="{cy + 34}" x2="{cx + card_w - 18}" y2="{cy + 34}" '
+            f'stroke="{t["border"]}" stroke-width="0.8" opacity="0.6"/>'
+        )
 
-    # 4. Contact
-    for key, val in CONTACT:
-        y += LH
-        out.append(kv(info_x, y, key, val, t['con_k'], t['con_v'], None, t['cc']))
+        # Content rows
+        row_start_y = cy + 54
+        LH = 22
+        for idx, (lbl, val, vid) in enumerate(items):
+            ry = row_start_y + idx * LH
+            id_attr = f' id="{vid}"' if vid else ''
+            lbl_text = f'{lbl} — '
+            lbl_len = len(lbl_text)
+            val_x = cx + 18 + int(round(lbl_len * CHAR_W))
 
-    y += LH; out.append(blank(info_x, y, t['cc']))
-    y += LH; out.append(rule(info_x, y, '- GitHub Stats', t['rule'], t['cc']))
+            out.append(f'<text x="{cx + 18}" y="{ry}" font-size="12" fill="{t["label"]}">{escape(lbl_text)}</text>')
+            out.append(f'<text x="{val_x}" y="{ry}" font-size="12" fill="{t["val"]}"{id_attr}>{escape(val)}</text>')
 
-    # 5. GitHub Stats
-    y += LH
-    out.append(
-        f'{blank(info_x, y, t["cc"])}<tspan fill="{t["stat_k"]}">Repos</tspan>:'
-        f'<tspan fill="{t["cc"]}" id="repo_data_dots"> ......... </tspan><tspan fill="{t["stat_v"]}" id="repo_data">0</tspan>'
-        f' {{<tspan fill="{t["stat_k"]}">Contributed</tspan>: <tspan fill="{t["stat_v"]}" id="contrib_data">0</tspan>}}'
-        f' | <tspan fill="{t["stat_k"]}">Stars</tspan>:<tspan fill="{t["cc"]}" id="star_data_dots"> ............. </tspan>'
-        f'<tspan fill="{t["stat_v"]}" id="star_data">0</tspan>')
-    y += LH
-    out.append(
-        f'{blank(info_x, y, t["cc"])}<tspan fill="{t["stat_k"]}">Commits</tspan>:'
-        f'<tspan fill="{t["cc"]}" id="commit_data_dots"> ........................ </tspan>'
-        f'<tspan fill="{t["stat_v"]}" id="commit_data">0</tspan>'
-        f' | <tspan fill="{t["stat_k"]}">Followers</tspan>:<tspan fill="{t["cc"]}" id="follower_data_dots"> ........... </tspan>'
-        f'<tspan fill="{t["stat_v"]}" id="follower_data">0</tspan>')
-    y += LH
-    out.append(
-        f'{blank(info_x, y, t["cc"])}<tspan fill="{t["stat_k"]}">Lines of Code on GitHub</tspan>:'
-        f'<tspan fill="{t["cc"]}" id="loc_data_dots">. </tspan><tspan fill="{t["stat_v"]}" id="loc_data">0</tspan>'
-        f' ( <tspan class="addColor" id="loc_add">0</tspan><tspan class="addColor">++</tspan>, '
-        f'<tspan id="loc_del_dots"> </tspan><tspan class="delColor" id="loc_del">0</tspan>'
-        f'<tspan class="delColor">--</tspan> )')
-    out.append('</text>')
-
-    # activity widget -- today.py replaces this group's children every run
+    # Activity widget container -- today.py updates this group
     divider_y = CARD_H + WIDGET_GAP / 2
-    out.append(f'<line x1="{IMG_X}" y1="{divider_y}" x2="{W-IMG_X}" y2="{divider_y}" stroke="{t["cc"]}" stroke-width="1" opacity="0.4"/>')
+    out.append(f'<line x1="25" y1="{divider_y}" x2="{W-25}" y2="{divider_y}" stroke="{t["border"]}" stroke-width="1" opacity="0.4"/>')
     out.append(f'<g id="activity_widget" transform="translate({build_contrib.MARGIN},{CARD_H+WIDGET_GAP})"></g>')
 
     out.append('</svg>')
