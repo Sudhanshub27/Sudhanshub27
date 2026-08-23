@@ -1,44 +1,26 @@
-"""Isometric contribution chart + streak widget, appended below the main card.
+"""Isometric / S-curve contribution chart + streak widget, appended below the main card.
 
-Mirrors GitHub's own "3D" contribution view: a full-width isometric calendar with two
-bordered stat cards overlaid in its empty corners -- Contributions top-right, Streaks
-bottom-left -- since the ribbon runs from short bars at the top-left down to tall ones
-at the bottom-right, leaving those two corners empty.
-
-build_card.py reserves the canvas space for this widget using the same sizing formulas
-as here, assuming a 53-week calendar -- the worst case, so a real 52-week calendar never
-overflows it. today.py calls render_widget() each run to fill that reserved space with
-the current data.
+build_card.py reserves the canvas space for this widget using panel_height().
+today.py calls render_widget() each run to fill that reserved space with the current data.
 """
 from xml.sax.saxutils import escape
+import math
 
 MARGIN = 15                 # matches build_card.py's IMG_X, so both sections line up
 INSET = 20                  # padding between the widget's edge and its content
-ASPECT = 9 / 16              # widget is a full 16:9 panel, not a tight fit around the chart
+ASPECT = 0.35               # proportioned panel height for the S-curve path
 N_ASSUMED_WEEKS = 53        # GitHub's calendar is never wider than this
-TILE_RATIO = 0.46           # tile_h / tile_w -- steep enough that bars read as tall, not squat
-MAX_H_RATIO = 2.6           # tallest bar's height, as a multiple of tile_w
+TILE_RATIO = 0.46           # tile_h / tile_w
+MAX_H_RATIO = 2.6
 FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
-
-# Card sizing: computed from content, not fixed -- see stat_card().
-BOX_PAD = 18
-COL_GAP = 125
-COL_CONTENT_W = 90
-BOX_ROW_H = 94
-
-# Empty days sit close to the background, and color runs smoothly from low to high
-# with contribution count -- the same ratio height uses, so two bars of similar
-# height always land on similar color, not just similar count. low/high are GitHub's
-# own level-1/level-4 greens, so the gradient stays a true green, not lime.
-import math
 
 WIDGET_THEMES = {
     'dark_mode.svg': dict(
-        fg='#F5E6D3', label='#C9A896', accent='#C85A3D', border='#4A3040', bg='#17121C',
+        fg='#F5E6D3', label='#C9A896', val='#E8CBB0', accent='#C85A3D', border='#4A3040', bg='#17121C',
         empty='#4A3E4F', low='#F5D6B8', high='#7A2E1F', trunk='#5A4A52', path='#2B2032',
         ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
     'light_mode.svg': dict(
-        fg='#4A3040', label='#8C6D58', accent='#C85A3D', border='#D8C2D3', bg='#FAF5F0',
+        fg='#4A3040', label='#8C6D58', val='#A85A3D', accent='#C85A3D', border='#D8C2D3', bg='#FAF5F0',
         empty='#C4B0C2', low='#F5D6B8', high='#7A2E1F', trunk='#6B5963', path='#F0E5EF',
         ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
 }
@@ -57,23 +39,14 @@ def panel_width(card_width):
 
 
 def tile_size(card_width):
-    """Tile footprint sized so the chart fills the widget width, assuming a 53-week
-    calendar. A real (<=53 week) calendar comes out narrower, never wider."""
     chart_w_target = panel_width(card_width) - 2 * INSET
     tile_w = chart_w_target / ((N_ASSUMED_WEEKS + 7) / 2)
     return tile_w, tile_w * TILE_RATIO
 
 
 def panel_height(card_width):
-    """A full 16:9 panel -- generously sized, not a tight fit around the chart -- so
-    the widget reads as a spacious section rather than a cramped strip. Never smaller
-    than the chart's worst case (53 weeks, tallest bar at the top-left corner), so a
-    narrow card whose 16:9 height would be too tight still never clips the chart."""
-    tile_w, tile_h = tile_size(card_width)
-    max_h = tile_w * MAX_H_RATIO
-    footprint_h = tile_h * (N_ASSUMED_WEEKS + 5) / 2 + tile_h
-    chart_required = footprint_h + max_h + 2 * INSET
-    return max(chart_required, panel_width(card_width) * ASPECT)
+    """Recomputed for S-curve path + bottom-left mini-tree streaks element."""
+    return round(panel_width(card_width) * ASPECT)
 
 
 def shade(hex_color, factor):
@@ -185,7 +158,7 @@ def render_chart(weeks, theme, tile_w, tile_h):
             R = canopy_r
             base_tier = min(3, int(ratio * 3.99))
 
-            # Outer ring circles (8-9 circles arranged in a rough ring around offset center)
+            # Outer ring circles
             n_outer = 8
             for k in range(n_outer):
                 angle = (2 * math.pi * k / n_outer) + math.sin(k * 3.7 + i) * 0.35
@@ -213,7 +186,7 @@ def render_chart(weeks, theme, tile_w, tile_h):
 
             # Floating petals for top ~20% high-contribution days
             if ratio >= 0.75:
-                p_color = ramp[0]  # Light blush pink
+                p_color = ramp[0]
                 p1_x, p1_y = cx + R * 0.7, cy - R * 1.1
                 p2_x, p2_y = cx - R * 0.8, cy - R * 0.9
                 p3_x, p3_y = cx + R * 1.1, cy - R * 0.4
@@ -230,13 +203,7 @@ def render_chart(weeks, theme, tile_w, tile_h):
 
 
 def compute_stats(days):
-    """Total, best day, and longest/current streaks from a chronological list of days.
-
-    The current streak treats today specially: if today has 0 contributions the day
-    isn't over yet, so it's skipped rather than treated as a break -- the streak is
-    evaluated as of yesterday instead. Without that, the streak reads as broken for
-    the entire day even though there's still time left to contribute.
-    """
+    """Total, best day, and longest/current streaks from a chronological list of days."""
     total = sum(d['contributionCount'] for d in days)
     best = max(days, key=lambda d: d['contributionCount'])
 
@@ -272,23 +239,94 @@ def month_day(iso_date):
     return datetime.date.fromisoformat(iso_date).strftime('%b %-d')
 
 
-def stat_cell(x, y, value, label, sub, theme):
-    return (f'<text x="{x:.1f}" y="{y:.1f}" font-size="24" font-weight="700" fill="{theme["accent"]}">{escape(value)}</text>'
-            f'<text x="{x:.1f}" y="{y+18:.1f}" font-size="12" font-weight="600" fill="{theme["fg"]}">{escape(label)}</text>'
-            f'<text x="{x:.1f}" y="{y+32:.1f}" font-size="10" fill="{theme["label"]}">{escape(sub)}</text>')
+def render_mini_tree(cx, cy, color, theme, is_empty=False):
+    """Renders a small sakura tree icon for streak displays using overlapping canopy circles."""
+    parts = []
+    trunk_color = theme.get('trunk', '#5A4A52')
+    if is_empty:
+        parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.0" fill="{theme["empty"]}"/>')
+        return ''.join(parts)
+
+    trunk_h = 18.0
+    tx, ty = cx, cy - trunk_h
+
+    # Thin trunk line
+    parts.append(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="1.6" stroke-linecap="round"/>')
+    # 2 short branch lines
+    parts.append(f'<line x1="{cx:.1f}" y1="{cy - trunk_h*0.45:.1f}" x2="{cx - 5.0:.1f}" y2="{cy - trunk_h*0.65:.1f}" stroke="{trunk_color}" stroke-width="1.1" stroke-linecap="round"/>')
+    parts.append(f'<line x1="{cx:.1f}" y1="{cy - trunk_h*0.65:.1f}" x2="{cx + 4.5:.1f}" y2="{cy - trunk_h*0.80:.1f}" stroke="{trunk_color}" stroke-width="1.1" stroke-linecap="round"/>')
+
+    # Fluffy canopy made of small overlapping circles
+    ramp = theme.get('ramp', ['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F'])
+    try:
+        c_idx = ramp.index(color)
+    except ValueError:
+        c_idx = 3
+    highlight_color = ramp[max(0, c_idx - 1)]
+
+    # 7 outer ring circles + 3 core circles
+    canopy_cx, canopy_cy = tx, ty - 2.0
+    R = 9.0
+    n_outer = 7
+    for k in range(n_outer):
+        angle = 2 * math.pi * k / n_outer
+        ox = canopy_cx + R * 0.55 * math.cos(angle)
+        oy = canopy_cy + R * 0.55 * math.sin(angle)
+        orad = R * (0.40 if k % 2 == 0 else 0.33)
+        c_fill = color if oy >= canopy_cy else highlight_color
+        parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{c_fill}" opacity="0.92"/>')
+
+    # 3 core volume circles
+    parts.append(f'<circle cx="{canopy_cx - 1.5:.1f}" cy="{canopy_cy - 1.0:.1f}" r="3.4" fill="{color}" opacity="0.95"/>')
+    parts.append(f'<circle cx="{canopy_cx + 1.5:.1f}" cy="{canopy_cy - 1.0:.1f}" r="3.2" fill="{highlight_color}" opacity="0.95"/>')
+    parts.append(f'<circle cx="{canopy_cx:.1f}" cy="{canopy_cy + 1.2:.1f}" r="3.0" fill="{color}" opacity="0.95"/>')
+
+    return ''.join(parts)
 
 
-def stat_card(x, y, title, cells, theme):
-    """A bordered rounded-rect card, sized snugly around its content: a title above,
-    evenly spaced stat cells inside. Returns (markup, width, height)."""
-    w = 2 * BOX_PAD + (len(cells) - 1) * COL_GAP + COL_CONTENT_W
-    h = BOX_ROW_H
-    parts = [f'<text x="{x:.1f}" y="{y-9:.1f}" font-size="13" font-weight="700" fill="{theme["fg"]}">{escape(title)}</text>',
-             f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="8" fill="none" stroke="{theme["border"]}"/>']
-    for i, (value, label, sub) in enumerate(cells):
-        cx = x + BOX_PAD + COL_GAP * i
-        parts.append(stat_cell(cx, y + 39, value, label, sub, theme))
-    return ''.join(parts), w, h
+def render_streaks(x, y, stats, theme):
+    """Renders the Streaks display as two mini sakura trees side by side with stats beneath."""
+    ramp = theme.get('ramp', ['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F'])
+    parts = []
+
+    longest_len = stats['longest_len']
+    longest_color = ramp[3]  # Deepest color for peak achievement
+    longest_range = f"{month_day(stats['longest_start'])} → {month_day(stats['longest_end'])}" if stats['longest_start'] else '—'
+
+    current_len = stats['current_len']
+    if current_len <= 0:
+        current_color = theme['empty']
+        is_curr_empty = True
+    else:
+        is_curr_empty = False
+        ratio = min(1.0, current_len / max(1, longest_len))
+        tier = min(3, int(ratio * 3.99))
+        current_color = ramp[tier]
+    current_range = f"{month_day(stats['current_start'])} → {month_day(stats['current_end'])}" if stats['current_start'] else '—'
+
+    # Column 1: Longest streak
+    col1_x = x
+    tree1_cx = col1_x + 14
+    tree1_cy = y + 26
+    parts.append(render_mini_tree(tree1_cx, tree1_cy, longest_color, theme))
+
+    t1_x = col1_x + 36
+    parts.append(f'<text x="{t1_x:.1f}" y="{y+16:.1f}" font-size="18" font-weight="700" fill="{theme["accent"]}">{longest_len} days</text>')
+    parts.append(f'<text x="{t1_x:.1f}" y="{y+32:.1f}" font-size="11" font-weight="600" fill="{theme["label"]}">Longest streak</text>')
+    parts.append(f'<text x="{t1_x:.1f}" y="{y+46:.1f}" font-size="10" fill="{theme["val"]}">{escape(longest_range)}</text>')
+
+    # Column 2: Current streak
+    col2_x = x + 185
+    tree2_cx = col2_x + 14
+    tree2_cy = y + 26
+    parts.append(render_mini_tree(tree2_cx, tree2_cy, current_color, theme, is_empty=is_curr_empty))
+
+    t2_x = col2_x + 36
+    parts.append(f'<text x="{t2_x:.1f}" y="{y+16:.1f}" font-size="18" font-weight="700" fill="{theme["accent"]}">{current_len} days</text>')
+    parts.append(f'<text x="{t2_x:.1f}" y="{y+32:.1f}" font-size="11" font-weight="600" fill="{theme["label"]}">Current streak</text>')
+    parts.append(f'<text x="{t2_x:.1f}" y="{y+46:.1f}" font-size="10" fill="{theme["val"]}">{escape(current_range)}</text>')
+
+    return ''.join(parts)
 
 
 def render_widget(theme, card_width, weeks):
@@ -300,35 +338,16 @@ def render_widget(theme, card_width, weeks):
 
     days = [d for w in weeks for d in w['contributionDays']]
     stats = compute_stats(days)
-    this_week = weeks[-1]['contributionDays']
-    this_week_total = sum(d['contributionCount'] for d in this_week)
-    avg_per_day = stats['total'] / len(days)
 
     parts = [f'<g font-family="{FONT}">']
 
-    chart_y = INSET + max(0, ((panel_h - 2 * INSET) - ch) / 2)
+    # Vertically center the S-curve chart in the full panel height
+    chart_y = max(0.0, (panel_h - ch) / 2.0)
     parts.append(f'<g transform="translate({INSET},{chart_y:.1f})">{chart_frag}</g>')
 
-    contrib_y = INSET + 22
-    contrib_markup, contrib_w, contrib_h = stat_card(0, contrib_y, 'Contributions', [
-        (f'{stats["total"]:,}', 'Total', f'{month_day(stats["range_start"])} → {month_day(stats["range_end"])}'),
-        (f'{this_week_total:,}', 'This week', f'{month_day(this_week[0]["date"])} → {month_day(this_week[-1]["date"])}'),
-        (f'{stats["best_count"]:,}', 'Best day', month_day(stats['best_date'])),
-    ], theme)
-    contrib_x = avail_w - INSET - contrib_w
-    parts.append(f'<g transform="translate({contrib_x:.1f},0)">{contrib_markup}</g>')
-    avg_y = contrib_y + contrib_h + 15
-    parts.append(f'<text x="{avail_w-INSET:.1f}" y="{avg_y:.1f}" font-size="11" fill="{theme["fg"]}" text-anchor="end">'
-                 f'Average: {avg_per_day:.2f} / day</text>')
-
-    streak_markup, streak_w, streak_h = stat_card(INSET, 0, 'Streaks', [
-        (f'{stats["longest_len"]} days', 'Longest',
-         f'{month_day(stats["longest_start"])} → {month_day(stats["longest_end"])}' if stats['longest_start'] else '—'),
-        (f'{stats["current_len"]} days', 'Current',
-         f'{month_day(stats["current_start"])} → {month_day(stats["current_end"])}' if stats['current_start'] else '—'),
-    ], theme)
-    streak_y = panel_h - INSET - streak_h
-    parts.append(f'<g transform="translate(0,{streak_y:.1f})">{streak_markup}</g>')
+    # Redesigned Streaks display in bottom-left corner
+    streak_y = panel_h - INSET - 48
+    parts.append(render_streaks(INSET, streak_y, stats, theme))
 
     parts.append('</g>')
     return ''.join(parts)
