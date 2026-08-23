@@ -24,7 +24,7 @@ HEADERS = {'authorization': 'token ' + TOKEN}
 USER_NAME = os.environ.get('USER_NAME') or os.environ.get('GITHUB_REPOSITORY_OWNER') or 'Sudhanshub27'
 if not USER_NAME:
     raise SystemExit('Set USER_NAME to your GitHub login')
-BIRTHDAY = datetime.datetime(2005, 9, 8)
+BIRTHDAY = datetime.datetime(2004, 9, 27)
 QUERY_COUNT = {'user_getter': 0, 'follower_getter': 0, 'graph_repos_stars': 0,
                'recursive_loc': 0, 'graph_commits': 0, 'loc_query': 0,
                'repos_contributed_to': 0, 'contribution_calendar': 0}

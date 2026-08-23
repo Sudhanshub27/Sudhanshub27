@@ -66,7 +66,7 @@ def portrait_data_uri(theme):
 
 
 # ---------------------------------------------------------------- info rows
-def uptime(birth=datetime.date(2005, 9, 8), today=None):
+def uptime(birth=datetime.date(2004, 9, 27), today=None):
     today = today or datetime.date.today()
     d = relativedelta.relativedelta(today, birth)
     p = lambda n, u: f"{n} {u}{'s' if n != 1 else ''}"
@@ -74,15 +74,15 @@ def uptime(birth=datetime.date(2005, 9, 8), today=None):
 
 
 ROWS_DATA = [
-    ('OS',                    'Linux, macOS, Windows 11',                   None),
+    ('OS',                    'Linux, Windows 11',                   None),
     ('Uptime',                uptime(),                                     'age_data'),
     ('Host',                  'VIT University, Vellore',                    None),
     ('Kernel',                'Full Stack Software Developer',              None),
-    ('IDE',                   'VS Code, Cursor',                             None),
+    ('IDE',                   'VS Code, Antigravity',                             None),
     (None, None, None),
-    ('Languages.Programming', 'TypeScript, JavaScript, Python, C++, Java',  None),
+    ('Languages.Programming', 'TypeScript, JavaScript, Python',  None),
     ('Languages.Computer',    'HTML, CSS, React, Next.js, Node.js, SQL',    None),
-    ('Languages.Real',        'English, Hindi',                       None),
+    ('Languages.Real',        'English, Hindi, Punjabi',                       None),
     (None, None, None),
     ('Hobbies.Software',      'Building products, AI experiments',          None),
     ('Hobbies.Hardware',      'Gaming, Cricket',                            None),
