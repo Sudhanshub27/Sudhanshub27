@@ -35,10 +35,24 @@ WIDGET_GAP = 25                      # gap between the card and the widget
 WIDGET_BOTTOM_PAD = 20
 
 THEMES = {
-    'dark_mode.svg':  dict(invert=False, bg='#161b22', fg='#c9d1d9', key='#ffa657',
-                           val='#a5d6ff', add='#3fb950', dele='#f85149', cc='#616e7f'),
-    'light_mode.svg': dict(invert=True,  bg='#f6f8fa', fg='#24292f', key='#953800',
-                           val='#0a3069', add='#1a7f37', dele='#cf222e', cc='#c2cfde'),
+    'dark_mode.svg': dict(
+        invert=False, bg='#0B1020', fg='#F8FAFC', handle='#3B82F6', rule='#8B5CF6', cc='#94A3B8',
+        sys_k='#06B6D4', sys_v='#F59E0B',
+        lang_k='#8B5CF6', lang_v='#10B981',
+        hob_k='#EC4899', hob_v='#3B82F6',
+        con_k='#10B981', con_v='#06B6D4',
+        stat_k='#3B82F6', stat_v='#F8FAFC',
+        add='#10B981', dele='#EC4899'
+    ),
+    'light_mode.svg': dict(
+        invert=True, bg='#f6f8fa', fg='#24292f', handle='#0969da', rule='#8250df', cc='#57606a',
+        sys_k='#0969da', sys_v='#bf8700',
+        lang_k='#8250df', lang_v='#1a7f37',
+        hob_k='#cf222e', hob_v='#0969da',
+        con_k='#1a7f37', con_v='#0969da',
+        stat_k='#0969da', stat_v='#24292f',
+        add='#1a7f37', dele='#cf222e'
+    ),
 }
 
 
@@ -95,23 +109,23 @@ CONTACT = [
 ]
 
 
-def kv(x, y, key, value, vid=None):
+def kv(x, y, key, value, key_clr, val_clr, vid=None, cc_clr='#94A3B8'):
     """`. Key: ....... value`, padded so the whole line is INFO_W chars."""
-    keytxt = '.'.join(f'<tspan class="key">{escape(p)}</tspan>' for p in key.split('.'))
+    keytxt = '.'.join(f'<tspan fill="{key_clr}">{escape(p)}</tspan>' for p in key.split('.'))
     dots = max(3, INFO_W - len(f'. {key}:{value}') - 2)
     idattr = f' id="{vid}"' if vid else ''
     dotid = f' id="{vid}_dots"' if vid else ''
-    return (f'<tspan x="{x}" y="{y}" class="cc">. </tspan>{keytxt}:'
-            f'<tspan class="cc"{dotid}> {"." * dots} </tspan>'
-            f'<tspan class="value"{idattr}>{escape(value)}</tspan>')
+    return (f'<tspan x="{x}" y="{y}" fill="{cc_clr}">. </tspan>{keytxt}:'
+            f'<tspan fill="{cc_clr}"{dotid}> {"." * dots} </tspan>'
+            f'<tspan fill="{val_clr}"{idattr}>{escape(value)}</tspan>')
 
 
-def rule(x, y, label):
-    return f'<tspan x="{x}" y="{y}">{escape(label)}</tspan> -{"—" * (INFO_W - len(label) - 5)}-—-'
+def rule(x, y, label, rule_clr, cc_clr='#94A3B8'):
+    return f'<tspan x="{x}" y="{y}" fill="{rule_clr}">{escape(label)}</tspan> <tspan fill="{cc_clr}">-{"—" * (INFO_W - len(label) - 5)}-—-</tspan>'
 
 
-def blank(x, y):
-    return f'<tspan x="{x}" y="{y}" class="cc">. </tspan>'
+def blank(x, y, cc_clr='#94A3B8'):
+    return f'<tspan x="{x}" y="{y}" fill="{cc_clr}">. </tspan>'
 
 
 def build(theme_file):
@@ -132,51 +146,68 @@ def build(theme_file):
         '-webkit-size-adjust: 109%;',
         'size-adjust: 109%;',
         '}',
-        f'.key {{fill: {t["key"]};}}',
-        f'.value {{fill: {t["val"]};}}',
         f'.addColor {{fill: {t["add"]};}}',
         f'.delColor {{fill: {t["dele"]};}}',
-        f'.cc {{fill: {t["cc"]};}}',
         'text, tspan {{white-space: pre;}}',
         '</style>',
         f'<rect width="{W}px" height="{H}px" fill="{t["bg"]}" rx="15"/>',
         f'<image x="{IMG_X}" y="{IMG_Y}" width="{iw}" height="{IMG_H}" href="{uri}"/>',
     ]
 
-    out.append(f'<text x="{info_x}" y="30" fill="{t["fg"]}">')
+    out.append(f'<text x="{info_x}" y="30">')
     y = 30
     handle = '@Sudhanshub27'
-    out.append(f'<tspan x="{info_x}" y="{y}">{handle}</tspan> -{"—" * (INFO_W - len(handle) - 5)}-—-')
-    for key, val, vid in ROWS_DATA:
+    out.append(f'<tspan x="{info_x}" y="{y}" fill="{t["handle"]}">{handle}</tspan> <tspan fill="{t["cc"]}">-{"—" * (INFO_W - len(handle) - 5)}-—-</tspan>')
+
+    # 1. System Info
+    for key, val, vid in ROWS_DATA[0:5]:
         y += LH
-        out.append(kv(info_x, y, key, val, vid) if key else blank(info_x, y))
-    y += LH; out.append(blank(info_x, y))
-    y += LH; out.append(rule(info_x, y, '- Contact'))
+        out.append(kv(info_x, y, key, val, t['sys_k'], t['sys_v'], vid, t['cc']))
+
+    y += LH; out.append(blank(info_x, y, t['cc']))
+
+    # 2. Languages
+    for key, val, vid in ROWS_DATA[6:9]:
+        y += LH
+        out.append(kv(info_x, y, key, val, t['lang_k'], t['lang_v'], vid, t['cc']))
+
+    y += LH; out.append(blank(info_x, y, t['cc']))
+
+    # 3. Hobbies
+    for key, val, vid in ROWS_DATA[10:12]:
+        y += LH
+        out.append(kv(info_x, y, key, val, t['hob_k'], t['hob_v'], vid, t['cc']))
+
+    y += LH; out.append(blank(info_x, y, t['cc']))
+    y += LH; out.append(rule(info_x, y, '- Contact', t['rule'], t['cc']))
+
+    # 4. Contact
     for key, val in CONTACT:
         y += LH
-        out.append(kv(info_x, y, key, val))
-    y += LH; out.append(blank(info_x, y))
-    y += LH; out.append(rule(info_x, y, '- GitHub Stats'))
+        out.append(kv(info_x, y, key, val, t['con_k'], t['con_v'], None, t['cc']))
 
-    # dynamic stat rows -- today.py rewrites the value + _dots pairs
+    y += LH; out.append(blank(info_x, y, t['cc']))
+    y += LH; out.append(rule(info_x, y, '- GitHub Stats', t['rule'], t['cc']))
+
+    # 5. GitHub Stats
     y += LH
     out.append(
-        f'{blank(info_x, y)}<tspan class="key">Repos</tspan>:'
-        f'<tspan class="cc" id="repo_data_dots"> ......... </tspan><tspan class="value" id="repo_data">0</tspan>'
-        f' {{<tspan class="key">Contributed</tspan>: <tspan class="value" id="contrib_data">0</tspan>}}'
-        f' | <tspan class="key">Stars</tspan>:<tspan class="cc" id="star_data_dots"> ............. </tspan>'
-        f'<tspan class="value" id="star_data">0</tspan>')
+        f'{blank(info_x, y, t["cc"])}<tspan fill="{t["stat_k"]}">Repos</tspan>:'
+        f'<tspan fill="{t["cc"]}" id="repo_data_dots"> ......... </tspan><tspan fill="{t["stat_v"]}" id="repo_data">0</tspan>'
+        f' {{<tspan fill="{t["stat_k"]}">Contributed</tspan>: <tspan fill="{t["stat_v"]}" id="contrib_data">0</tspan>}}'
+        f' | <tspan fill="{t["stat_k"]}">Stars</tspan>:<tspan fill="{t["cc"]}" id="star_data_dots"> ............. </tspan>'
+        f'<tspan fill="{t["stat_v"]}" id="star_data">0</tspan>')
     y += LH
     out.append(
-        f'{blank(info_x, y)}<tspan class="key">Commits</tspan>:'
-        f'<tspan class="cc" id="commit_data_dots"> ........................ </tspan>'
-        f'<tspan class="value" id="commit_data">0</tspan>'
-        f' | <tspan class="key">Followers</tspan>:<tspan class="cc" id="follower_data_dots"> ........... </tspan>'
-        f'<tspan class="value" id="follower_data">0</tspan>')
+        f'{blank(info_x, y, t["cc"])}<tspan fill="{t["stat_k"]}">Commits</tspan>:'
+        f'<tspan fill="{t["cc"]}" id="commit_data_dots"> ........................ </tspan>'
+        f'<tspan fill="{t["stat_v"]}" id="commit_data">0</tspan>'
+        f' | <tspan fill="{t["stat_k"]}">Followers</tspan>:<tspan fill="{t["cc"]}" id="follower_data_dots"> ........... </tspan>'
+        f'<tspan fill="{t["stat_v"]}" id="follower_data">0</tspan>')
     y += LH
     out.append(
-        f'{blank(info_x, y)}<tspan class="key">Lines of Code on GitHub</tspan>:'
-        f'<tspan class="cc" id="loc_data_dots">. </tspan><tspan class="value" id="loc_data">0</tspan>'
+        f'{blank(info_x, y, t["cc"])}<tspan fill="{t["stat_k"]}">Lines of Code on GitHub</tspan>:'
+        f'<tspan fill="{t["cc"]}" id="loc_data_dots">. </tspan><tspan fill="{t["stat_v"]}" id="loc_data">0</tspan>'
         f' ( <tspan class="addColor" id="loc_add">0</tspan><tspan class="addColor">++</tspan>, '
         f'<tspan id="loc_del_dots"> </tspan><tspan class="delColor" id="loc_del">0</tspan>'
         f'<tspan class="delColor">--</tspan> )')

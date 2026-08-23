@@ -32,8 +32,8 @@ BOX_ROW_H = 94
 # own level-1/level-4 greens, so the gradient stays a true green, not lime.
 WIDGET_THEMES = {
     'dark_mode.svg': dict(
-        fg='#c9d1d9', label='#8b949e', accent='#39d353', border='#30363d', bg='#161b22',
-        empty='#242920', low='#0e4429', high='#39d353'),
+        fg='#F8FAFC', label='#94A3B8', accent='#3B82F6', border='#1E293B', bg='#0B1020',
+        empty='#151D33', low='#10B981', high='#3B82F6'),
     'light_mode.svg': dict(
         fg='#24292f', label='#57606a', accent='#216e39', border='#d0d7de', bg='#f6f8fa',
         empty='#efece0', low='#9be9a8', high='#216e39'),
