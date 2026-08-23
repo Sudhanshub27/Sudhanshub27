@@ -16,7 +16,7 @@ FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
 
 WIDGET_THEMES = {
     'card_dark.svg': dict(
-        fg='#F5E6D3', label='#C9A896', val='#E8CBB0', accent='#C85A3D', border='#4A3040', bg='#17121C',
+        fg='#F5E6D3', label='#C9A896', val='#E8CBB0', accent='#C85A3D', border='#4A3040', bg='#0D1117',
         empty='#4A3E4F', low='#F5D6B8', high='#7A2E1F', trunk='#5A4A52', path='#2B2032',
         ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
     'card_light.svg': dict(
@@ -57,19 +57,13 @@ def shade(hex_color, factor):
 
 
 def render_chart(weeks, theme, tile_w, tile_h):
-    """Renders the calendar as a Sakura forest along an S-curve switchback path.
-
-    Days are distributed in chronological order along a winding sine-wave path.
-    Empty days render as faint gray-purple path dots. Contribution days render as trees
-    with thin trunks, branch lines, and multi-layered organic sakura blossom canopies.
-    """
+    """Renders the calendar as a Sakura forest along an S-curve switchback path using 4 discrete growth tiers."""
     all_days = [d for w in weeks for d in w['contributionDays']]
     N = len(all_days)
     if N == 0:
         return '<g></g>', 0, 0
 
-    max_count = max((d['contributionCount'] for d in all_days), default=1) or 1
-    ramp = theme.get('ramp', ['#FFB6C1', '#F472B6', '#E91E63', '#BE185D'])
+    ramp = theme.get('ramp', ['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F'])
     trunk_color = theme.get('trunk', '#5A4A52')
     path_color = theme.get('path', '#271F30')
 
@@ -116,10 +110,7 @@ def render_chart(weeks, theme, tile_w, tile_h):
     # 3. Sort trees back-to-front by vertical position (pos_y) for proper occlusion
     day_nodes.sort(key=lambda item: item['pos_y'])
 
-    # 4. Render day nodes (faint path dots or sakura trees)
-    min_trunk_h, max_trunk_h = 10.0, 28.0
-    min_canopy_r, max_canopy_r = 7.0, 18.0
-
+    # 4. Render day nodes using 4 discrete growth tiers based on commit count
     for item in day_nodes:
         i = item['index']
         d = item['day']
@@ -131,72 +122,133 @@ def render_chart(weeks, theme, tile_w, tile_h):
             parts.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="1.5" fill="{theme["empty"]}" opacity="0.75"/>')
             minx, maxx = min(minx, px - 2), max(maxx, px + 2)
             miny, maxy = min(miny, py - 2), max(maxy, py + 2)
-        else:
-            ratio = (c / max_count) ** 0.65
-            trunk_h = min_trunk_h + (max_trunk_h - min_trunk_h) * ratio
-            canopy_r = min_canopy_r + (max_canopy_r - min_canopy_r) * ratio
-            trunk_w = max(1.2, 1.0 + ratio * 1.0)
-            branch_len = trunk_h * 0.28
-
-            # Trunk top
+        elif c in (1, 2):
+            # Tier 1: Sapling (1-2 commits)
+            # Thin single trunk (width 1.0, no branches), 2-3 small light circles (#F5D6B8)
+            trunk_h = 10.0
             tx, ty = px, py - trunk_h
+            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
 
-            # Thin trunk line
-            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w:.1f}" stroke-linecap="round"/>')
+            cx, cy = tx, ty - 2.5
+            color_1 = ramp[0]  # #F5D6B8
+            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.8" fill="{color_1}" opacity="0.90"/>')
+            parts.append(f'<circle cx="{cx - 2.2:.1f}" cy="{cy + 1.0:.1f}" r="3.0" fill="{color_1}" opacity="0.85"/>')
+            parts.append(f'<circle cx="{cx + 2.2:.1f}" cy="{cy - 0.8:.1f}" r="2.8" fill="{color_1}" opacity="0.85"/>')
 
-            # 2-3 short branch lines
+            minx, maxx = min(minx, cx - 6), max(maxx, cx + 6)
+            miny, maxy = min(miny, cy - 6), max(maxy, py)
+        elif c in (3, 4, 5):
+            # Tier 2: Young tree (3-5 commits)
+            # Trunk width 1.4, 1-2 branch lines, canopy 4-5 circles in looser cluster (#E8946B)
+            trunk_h = 16.0
+            tx, ty = px, py - trunk_h
+            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="1.4" stroke-linecap="round"/>')
+
+            b1_y = py - trunk_h * 0.50
+            parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - 4.2:.1f}" y2="{b1_y - 2.8:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
+            b2_y = py - trunk_h * 0.70
+            parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + 3.8:.1f}" y2="{b2_y - 2.2:.1f}" stroke="{trunk_color}" stroke-width="0.9" stroke-linecap="round"/>')
+
+            cx, cy = tx, ty - 3.2
+            c_primary = ramp[1]     # #E8946B
+            c_highlight = ramp[0]   # #F5D6B8
+            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="5.2" fill="{c_primary}" opacity="0.92"/>')
+            parts.append(f'<circle cx="{cx - 3.2:.1f}" cy="{cy - 1.2:.1f}" r="4.0" fill="{c_highlight}" opacity="0.90"/>')
+            parts.append(f'<circle cx="{cx + 3.5:.1f}" cy="{cy - 0.8:.1f}" r="3.8" fill="{c_primary}" opacity="0.90"/>')
+            parts.append(f'<circle cx="{cx - 1.8:.1f}" cy="{cy + 2.2:.1f}" r="3.5" fill="{c_primary}" opacity="0.88"/>')
+            parts.append(f'<circle cx="{cx + 2.0:.1f}" cy="{cy + 1.8:.1f}" r="3.2" fill="{c_highlight}" opacity="0.88"/>')
+
+            minx, maxx = min(minx, cx - 8), max(maxx, cx + 8)
+            miny, maxy = min(miny, cy - 8), max(maxy, py)
+        elif c in (6, 7, 8):
+            # Tier 3: Mature tree (6-8 commits)
+            # Trunk width 2.0, 2-3 branches, canopy 7-9 circles in fuller dense ring + core (#C85A3D)
+            trunk_h = 22.0
+            tx, ty = px, py - trunk_h
+            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="2.0" stroke-linecap="round"/>')
+
             b1_y = py - trunk_h * 0.45
-            parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - branch_len*0.8:.1f}" y2="{b1_y - branch_len*0.5:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w*0.7:.1f}" stroke-linecap="round"/>')
+            parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - 6.2:.1f}" y2="{b1_y - 3.8:.1f}" stroke="{trunk_color}" stroke-width="1.3" stroke-linecap="round"/>')
             b2_y = py - trunk_h * 0.65
-            parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + branch_len*0.7:.1f}" y2="{b2_y - branch_len*0.4:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w*0.7:.1f}" stroke-linecap="round"/>')
-            if ratio >= 0.4:
-                b3_y = py - trunk_h * 0.80
-                parts.append(f'<line x1="{px:.1f}" y1="{b3_y:.1f}" x2="{px - branch_len*0.6:.1f}" y2="{b3_y - branch_len*0.3:.1f}" stroke="{trunk_color}" stroke-width="{trunk_w*0.6:.1f}" stroke-linecap="round"/>')
+            parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + 5.8:.1f}" y2="{b2_y - 3.2:.1f}" stroke="{trunk_color}" stroke-width="1.2" stroke-linecap="round"/>')
+            b3_y = py - trunk_h * 0.82
+            parts.append(f'<line x1="{px:.1f}" y1="{b3_y:.1f}" x2="{px - 4.8:.1f}" y2="{b3_y - 2.4:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
 
-            # Fluffy Sakura Canopy: 8-9 outer ring circles + 4 inner core circles
-            cx, cy = tx, ty - canopy_r * 0.2
-            R = canopy_r
-            base_tier = min(3, int(ratio * 3.99))
+            cx, cy = tx, ty - 4.0
+            R = 8.2
+            c_primary = ramp[2]   # #C85A3D
+            c_mid = ramp[1]       # #E8946B
+            c_deep = ramp[3]      # #7A2E1F
 
-            # Outer ring circles
             n_outer = 8
             for k in range(n_outer):
-                angle = (2 * math.pi * k / n_outer) + math.sin(k * 3.7 + i) * 0.35
-                dist = R * (0.55 + math.sin(k * 2.5 + i * 1.7) * 0.20)
-                ox = cx + dist * math.cos(angle)
-                oy = cy + dist * math.sin(angle)
-                orad = R * (0.36 + math.cos(k * 1.9 + i) * 0.10)
+                angle = (2 * math.pi * k / n_outer) + math.sin(k * 3.7 + i) * 0.3
+                ox = cx + R * 0.58 * math.cos(angle)
+                oy = cy + R * 0.58 * math.sin(angle)
+                orad = R * (0.38 + math.cos(k * 2.1 + i) * 0.08)
+                color_k = c_primary if oy >= cy else c_mid
+                parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color_k}" opacity="0.90"/>')
 
-                # Shade selection across 4-step ramp
-                shade_idx = base_tier if oy >= cy else max(0, base_tier - 1)
-                if k % 3 == 0:
-                    shade_idx = min(3, base_tier + 1)
-                color = ramp[shade_idx]
-                parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color}" opacity="0.90"/>')
+            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{R*0.40:.1f}" fill="{c_deep}" opacity="0.95"/>')
+            parts.append(f'<circle cx="{cx - 1.8:.1f}" cy="{cy - 1.2:.1f}" r="{R*0.34:.1f}" fill="{c_primary}" opacity="0.95"/>')
+            parts.append(f'<circle cx="{cx + 1.8:.1f}" cy="{cy + 0.8:.1f}" r="{R*0.32:.1f}" fill="{c_mid}" opacity="0.95"/>')
 
-            # Inner core cluster (4 smaller circles for volume and depth)
-            core_offsets = [
-                (-R * 0.15, -R * 0.10, R * 0.38, ramp[base_tier]),
-                (R * 0.12, -R * 0.22, R * 0.35, ramp[max(0, base_tier - 1)]),
-                (-R * 0.08, R * 0.12, R * 0.32, ramp[min(3, base_tier + 1)]),
-                (R * 0.18, R * 0.05, R * 0.30, ramp[base_tier]),
-            ]
-            for dx_c, dy_c, r_c, color_c in core_offsets:
-                parts.append(f'<circle cx="{cx + dx_c:.1f}" cy="{cy + dy_c:.1f}" r="{r_c:.1f}" fill="{color_c}" opacity="0.95"/>')
-
-            # Floating petals for top ~20% high-contribution days
-            if ratio >= 0.75:
-                p_color = ramp[0]
-                p1_x, p1_y = cx + R * 0.7, cy - R * 1.1
-                p2_x, p2_y = cx - R * 0.8, cy - R * 0.9
-                p3_x, p3_y = cx + R * 1.1, cy - R * 0.4
-                parts.append(f'<circle cx="{p1_x:.1f}" cy="{p1_y:.1f}" r="1.1" fill="{p_color}" opacity="0.85"/>')
-                parts.append(f'<circle cx="{p2_x:.1f}" cy="{p2_y:.1f}" r="0.9" fill="{p_color}" opacity="0.75"/>')
-                parts.append(f'<circle cx="{p3_x:.1f}" cy="{p3_y:.1f}" r="1.0" fill="{p_color}" opacity="0.65"/>')
-
-            # Bounds tracking
             minx, maxx = min(minx, cx - R * 1.3), max(maxx, cx + R * 1.3)
             miny, maxy = min(miny, cy - R * 1.3), max(maxy, py)
+        else:
+            # Tier 4: Ancient tree (9+ commits)
+            # Thickest trunk (width 2.8), gnarled with slight bend/curve, 3-4 branches, canopy 10-12 circles (#7A2E1F)
+            # ONLY tier that gets floating petal dots above it
+            trunk_h = 27.0
+            bend_dir = 1.0 if (i % 2 == 0) else -1.0
+            bend_amount = 3.2 * bend_dir
+            mid_x = px + bend_amount
+            mid_y = py - trunk_h * 0.5
+            tx = px + bend_amount * 0.6
+            ty = py - trunk_h
+
+            parts.append(f'<path d="M {px:.1f},{py:.1f} Q {mid_x:.1f},{mid_y:.1f} {tx:.1f},{ty:.1f}" stroke="{trunk_color}" stroke-width="2.8" stroke-linecap="round" fill="none"/>')
+
+            b1_x, b1_y = px + bend_amount * 0.4, py - trunk_h * 0.40
+            parts.append(f'<line x1="{b1_x:.1f}" y1="{b1_y:.1f}" x2="{b1_x - 7.5*bend_dir:.1f}" y2="{b1_y - 4.5:.1f}" stroke="{trunk_color}" stroke-width="1.6" stroke-linecap="round"/>')
+            b2_x, b2_y = px + bend_amount * 0.6, py - trunk_h * 0.62
+            parts.append(f'<line x1="{b2_x:.1f}" y1="{b2_y:.1f}" x2="{b2_x + 7.0*bend_dir:.1f}" y2="{b2_y - 4.0:.1f}" stroke="{trunk_color}" stroke-width="1.4" stroke-linecap="round"/>')
+            b3_x, b3_y = px + bend_amount * 0.8, py - trunk_h * 0.80
+            parts.append(f'<line x1="{b3_x:.1f}" y1="{b3_y:.1f}" x2="{b3_x - 6.0*bend_dir:.1f}" y2="{b3_y - 3.2:.1f}" stroke="{trunk_color}" stroke-width="1.2" stroke-linecap="round"/>')
+
+            cx, cy = tx, ty - 4.8
+            R = 11.5
+            c_deep = ramp[3]    # #7A2E1F
+            c_mid = ramp[2]     # #C85A3D
+            c_light = ramp[1]   # #E8946B
+
+            n_outer = 10
+            for k in range(n_outer):
+                angle = (2 * math.pi * k / n_outer) + math.sin(k * 3.1 + i) * 0.3
+                ox = cx + R * 0.60 * math.cos(angle)
+                oy = cy + R * 0.60 * math.sin(angle)
+                orad = R * (0.38 + math.cos(k * 2.3 + i) * 0.09)
+                color_k = c_deep if oy >= cy else c_mid
+                if k % 4 == 0:
+                    color_k = c_light
+                parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color_k}" opacity="0.92"/>')
+
+            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{R*0.42:.1f}" fill="{c_deep}" opacity="0.95"/>')
+            parts.append(f'<circle cx="{cx - 2.8:.1f}" cy="{cy - 1.8:.1f}" r="{R*0.35:.1f}" fill="{c_mid}" opacity="0.95"/>')
+            parts.append(f'<circle cx="{cx + 2.8:.1f}" cy="{cy - 0.8:.1f}" r="{R*0.34:.1f}" fill="{c_deep}" opacity="0.95"/>')
+            parts.append(f'<circle cx="{cx:.1f}" cy="{cy + 2.2:.1f}" r="{R*0.30:.1f}" fill="{c_mid}" opacity="0.95"/>')
+
+            # Floating petal dots (ONLY tier 4 gets floating petals)
+            p_color = ramp[0]  # #F5D6B8
+            p1_x, p1_y = cx + R * 0.75, cy - R * 1.12
+            p2_x, p2_y = cx - R * 0.85, cy - R * 0.92
+            p3_x, p3_y = cx + R * 1.10, cy - R * 0.42
+            parts.append(f'<circle cx="{p1_x:.1f}" cy="{p1_y:.1f}" r="1.3" fill="{p_color}" opacity="0.88"/>')
+            parts.append(f'<circle cx="{p2_x:.1f}" cy="{p2_y:.1f}" r="1.0" fill="{p_color}" opacity="0.78"/>')
+            parts.append(f'<circle cx="{p3_x:.1f}" cy="{p3_y:.1f}" r="1.1" fill="{p_color}" opacity="0.68"/>')
+
+            minx, maxx = min(minx, cx - R * 1.4), max(maxx, cx + R * 1.4)
+            miny, maxy = min(miny, cy - R * 1.4), max(maxy, py)
 
     frag = f'<g transform="translate({-minx:.1f},{-miny:.1f})">' + ''.join(parts) + '</g>'
     return frag, maxx - minx, maxy - miny

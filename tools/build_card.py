@@ -17,12 +17,12 @@ WIDGET_BOTTOM_PAD = 20
 
 THEMES = {
     'card_dark.svg': dict(
-        bg='#17121C', card_bg='#17121C', border='#4A3040',
+        bg='#0D1117', card_bg='#17121C', border='#4A3040',
         hdr='#F5E6D3', label='#C9A896', val='#E8CBB0',
         subtext='#C9A896', sep='#5A4A52', add='#C85A3D', dele='#7A2E1F'
     ),
     'card_light.svg': dict(
-        bg='#FAF5F0', card_bg='#FAF5F0', border='#D8C2D3',
+        bg='#FAF5F0', card_bg='#F2E8E0', border='#D8C2D3',
         hdr='#4A3040', label='#8C6D58', val='#A85A3D',
         subtext='#8C6D58', sep='#C4B0C2', add='#C85A3D', dele='#7A2E1F'
     ),
