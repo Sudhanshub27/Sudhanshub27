@@ -15,12 +15,7 @@ from dateutil import relativedelta
 
 import build_contrib
 
-SRC = 'giphy.gif'
-
-IMG_X, IMG_Y, IMG_H = 15, 28, 474    # width is derived from the source aspect (never crops)
-IMG_SCALE = 1
-IMG_GAP = 22                         # gutter between portrait and info column
-
+IMG_X, IMG_Y = 25, 28
 INFO_W, INFO_FS, LH = 64, 16, 20     # info column: chars per line, font size, line height
 INFO_SLACK = 3
 ADV = 0.5995                         # ConsolasFallback advance, in em
@@ -56,27 +51,17 @@ THEMES = {
 }
 
 
-# ---------------------------------------------------------------- portrait panel
+# ---------------------------------------------------------------- info panel
 def panel_width():
-    """Panel width that matches the source aspect exactly, so nothing is ever cropped."""
-    w, h = Image.open(SRC).size
-    return int(round(IMG_H * w / h))
+    return 0
 
 
 def compute_card_width():
-    iw = panel_width()
-    info_x = IMG_X + iw + IMG_GAP
-    return int(round(info_x + (INFO_W + INFO_SLACK) * INFO_FS * ADV)) + 15
+    info_x = IMG_X
+    return int(round(info_x + (INFO_W + INFO_SLACK) * INFO_FS * ADV)) + IMG_X
 
 
 H = CARD_H + WIDGET_GAP + build_contrib.panel_height(compute_card_width()) + WIDGET_BOTTOM_PAD
-
-
-def portrait_data_uri(theme):
-    """Embed the animated GIF directly as base64."""
-    with open(SRC, 'rb') as f:
-        raw = f.read()
-    return 'data:image/gif;base64,' + base64.b64encode(raw).decode('ascii'), len(raw)
 
 
 # ---------------------------------------------------------------- info rows
@@ -130,9 +115,7 @@ def blank(x, y, cc_clr='#94A3B8'):
 
 def build(theme_file):
     t = THEMES[theme_file]
-    uri, nbytes = portrait_data_uri(t)
-    iw = panel_width()
-    info_x = IMG_X + iw + IMG_GAP
+    info_x = IMG_X
     W = compute_card_width()
     out = [
         "<?xml version='1.0' encoding='UTF-8'?>",
@@ -151,7 +134,6 @@ def build(theme_file):
         'text, tspan {{white-space: pre;}}',
         '</style>',
         f'<rect width="{W}px" height="{H}px" fill="{t["bg"]}" rx="15"/>',
-        f'<image x="{IMG_X}" y="{IMG_Y}" width="{iw}" height="{IMG_H}" href="{uri}"/>',
     ]
 
     out.append(f'<text x="{info_x}" y="30">')
@@ -228,11 +210,5 @@ if __name__ == '__main__':
     for name in THEMES:
         svg = build(name)
         open(f'{dest}/{name}', 'w').write(svg)
-        _, nbytes = portrait_data_uri(THEMES[name])
-        inv = 'RGB inverted' if THEMES[name]['invert'] else 'untouched   '
-        print(f'wrote {dest}/{name:16s} {inv}  png {nbytes/1024:4.0f} KB  svg {len(svg)/1024:4.0f} KB')
-    iw = panel_width()
-    info_x = IMG_X + iw + IMG_GAP
-    print(f'panel: {iw}x{IMG_H} (source aspect, no crop), encoded at {IMG_SCALE}x')
-    print(f'info : x={info_x}, {INFO_W}(+{INFO_SLACK}) chars -> card {int(round(info_x + (INFO_W+INFO_SLACK)*INFO_FS*ADV))+15}x{H}')
+        print(f'wrote {dest}/{name:16s} svg {len(svg)/1024:4.0f} KB')
     print('uptime today:', uptime())
