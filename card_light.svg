@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" font-family="ConsolasFallback,Consolas,monospace" width="870px" height="799px" font-size="12px">
+<style>
+@font-face {
+src: local('Consolas'), local('Consolas Bold');
+font-family: 'ConsolasFallback';
+font-display: swap;
+-webkit-size-adjust: 109%;
+size-adjust: 109%;
+}
+text {white-space: pre;}
+</style>
+<rect width="870px" height="799px" fill="#FAF5F0" rx="15"/>
+<text x="25" y="36" font-size="18" font-weight="700" fill="#4A3040">@Sudhanshub27</text>
+<text x="175" y="36" font-size="13" font-weight="400" fill="#8C6D58">• Full Stack Software Developer</text>
+<text x="25" y="56" font-size="12" fill="#8C6D58">VIT University, Vellore • India</text>
+<rect x="25" y="75" width="400" height="172" rx="8" fill="#FAF5F0" stroke="#D8C2D3" stroke-width="1.2"/>
+<text x="43" y="101" font-size="11" font-weight="700" letter-spacing="1.5" fill="#4A3040">ABOUT</text>
+<line x1="43" y1="109" x2="407" y2="109" stroke="#D8C2D3" stroke-width="0.8" opacity="0.6"/>
+<text x="43" y="129" font-size="12" fill="#8C6D58">OS — </text>
+<text x="79" y="129" font-size="12" fill="#A85A3D">Linux, Windows 11</text>
+<text x="43" y="151" font-size="12" fill="#8C6D58">Growing since — </text>
+<text x="158" y="151" font-size="12" fill="#A85A3D" id="age_data">21 years, 10 months, 27 days</text>
+<text x="43" y="173" font-size="12" fill="#8C6D58">Rooted at — </text>
+<text x="129" y="173" font-size="12" fill="#A85A3D">VIT University, Vellore</text>
+<text x="43" y="195" font-size="12" fill="#8C6D58">Core — </text>
+<text x="93" y="195" font-size="12" fill="#A85A3D">Full Stack Software Developer</text>
+<text x="43" y="217" font-size="12" fill="#8C6D58">Tools — </text>
+<text x="101" y="217" font-size="12" fill="#A85A3D">VS Code, Antigravity</text>
+<rect x="445" y="75" width="400" height="172" rx="8" fill="#FAF5F0" stroke="#D8C2D3" stroke-width="1.2"/>
+<text x="463" y="101" font-size="11" font-weight="700" letter-spacing="1.5" fill="#4A3040">LANGUAGES</text>
+<line x1="463" y1="109" x2="827" y2="109" stroke="#D8C2D3" stroke-width="0.8" opacity="0.6"/>
+<text x="463" y="129" font-size="12" fill="#8C6D58">Code — </text>
+<text x="513" y="129" font-size="12" fill="#A85A3D">TypeScript, JavaScript, Python</text>
+<text x="463" y="151" font-size="12" fill="#8C6D58">Web — </text>
+<text x="506" y="151" font-size="12" fill="#A85A3D">HTML, CSS, React, Next.js, Node.js, SQL</text>
+<text x="463" y="173" font-size="12" fill="#8C6D58">Speak — </text>
+<text x="521" y="173" font-size="12" fill="#A85A3D">English, Hindi, Punjabi</text>
+<rect x="25" y="265" width="400" height="172" rx="8" fill="#FAF5F0" stroke="#D8C2D3" stroke-width="1.2"/>
+<text x="43" y="291" font-size="11" font-weight="700" letter-spacing="1.5" fill="#4A3040">INTERESTS</text>
+<line x1="43" y1="299" x2="407" y2="299" stroke="#D8C2D3" stroke-width="0.8" opacity="0.6"/>
+<text x="43" y="319" font-size="12" fill="#8C6D58">Tends to — </text>
+<text x="122" y="319" font-size="12" fill="#A85A3D">Building products, AI experiments</text>
+<text x="43" y="341" font-size="12" fill="#8C6D58">Wanders into — </text>
+<text x="151" y="341" font-size="12" fill="#A85A3D">Gaming, Cricket</text>
+<rect x="445" y="265" width="400" height="172" rx="8" fill="#FAF5F0" stroke="#D8C2D3" stroke-width="1.2"/>
+<text x="463" y="291" font-size="11" font-weight="700" letter-spacing="1.5" fill="#4A3040">CONTACT</text>
+<line x1="463" y1="299" x2="827" y2="299" stroke="#D8C2D3" stroke-width="0.8" opacity="0.6"/>
+<text x="463" y="319" font-size="12" fill="#8C6D58">Email — </text>
+<text x="521" y="319" font-size="12" fill="#A85A3D">sudhanshubatra27@gmail.com</text>
+<text x="463" y="341" font-size="12" fill="#8C6D58">LinkedIn — </text>
+<text x="542" y="341" font-size="12" fill="#A85A3D">sudhanshu-batra</text>
+<text x="463" y="363" font-size="12" fill="#8C6D58">Instagram — </text>
+<text x="549" y="363" font-size="12" fill="#A85A3D">batra_sudhanshu</text>
+<text x="463" y="385" font-size="12" fill="#8C6D58">Portfolio — </text>
+<text x="549" y="385" font-size="12" fill="#A85A3D">sudhanshubatra.in</text>
+<line x1="25" y1="472.5" x2="845" y2="472.5" stroke="#D8C2D3" stroke-width="1" opacity="0.4"/>
+<g id="activity_widget" transform="translate(15,485)"></g>
+</svg>

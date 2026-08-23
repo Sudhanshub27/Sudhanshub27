@@ -15,11 +15,11 @@ MAX_H_RATIO = 2.6
 FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
 
 WIDGET_THEMES = {
-    'dark_mode.svg': dict(
+    'card_dark.svg': dict(
         fg='#F5E6D3', label='#C9A896', val='#E8CBB0', accent='#C85A3D', border='#4A3040', bg='#17121C',
         empty='#4A3E4F', low='#F5D6B8', high='#7A2E1F', trunk='#5A4A52', path='#2B2032',
         ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
-    'light_mode.svg': dict(
+    'card_light.svg': dict(
         fg='#4A3040', label='#8C6D58', val='#A85A3D', accent='#C85A3D', border='#D8C2D3', bg='#FAF5F0',
         empty='#C4B0C2', low='#F5D6B8', high='#7A2E1F', trunk='#6B5963', path='#F0E5EF',
         ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),

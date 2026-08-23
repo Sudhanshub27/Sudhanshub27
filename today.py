@@ -148,7 +148,7 @@ if __name__ == '__main__':
     weeks, weeks_time = perf_counter(contribution_calendar)
     formatter('contribution calendar', weeks_time)
 
-    svg_overwrite('dark_mode.svg', age_data, weeks)
-    svg_overwrite('light_mode.svg', age_data, weeks)
+    svg_overwrite('card_dark.svg', age_data, weeks)
+    svg_overwrite('card_light.svg', age_data, weeks)
 
     print('Total GitHub GraphQL API calls:', '{:>3}'.format(sum(QUERY_COUNT.values())))
