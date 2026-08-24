@@ -267,6 +267,17 @@ def render_background_scenery(theme, chart_w, panel_h):
             b_d = f"M {bx:.1f},{by:.1f} Q {bx+4:.1f},{by-4:.1f} {bx+8:.1f},{by:.1f} Q {bx+12:.1f},{by-4:.1f} {bx+16:.1f},{by:.1f}"
             parts.append(f'<path d="{b_d}" stroke="#8C6D58" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.60"/>')
 
+        # Small owl silhouette perched on near mountain ridge point
+        ox, oy = chart_w * 0.82, panel_h * 0.46
+        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 2.2:.1f}" r="2.2" fill="#5C4A42" opacity="0.80"/>')
+        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 5.0:.1f}" r="1.6" fill="#5C4A42" opacity="0.80"/>')
+        ear_l = f"M {ox - 1.5:.1f},{oy - 5.6:.1f} L {ox - 0.6:.1f},{oy - 7.2:.1f} L {ox - 0.2:.1f},{oy - 5.6:.1f} Z"
+        ear_r = f"M {ox + 1.5:.1f},{oy - 5.6:.1f} L {ox + 0.6:.1f},{oy - 7.2:.1f} L {ox + 0.2:.1f},{oy - 5.6:.1f} Z"
+        parts.append(f'<path d="{ear_l}" fill="#5C4A42" opacity="0.80"/>')
+        parts.append(f'<path d="{ear_r}" fill="#5C4A42" opacity="0.80"/>')
+        parts.append(f'<circle cx="{ox - 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="#C85A3D" opacity="0.70"/>')
+        parts.append(f'<circle cx="{ox + 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="#C85A3D" opacity="0.70"/>')
+
     # Soft horizontal ground fog band
     parts.append(f'<rect x="0" y="{panel_h*0.75:.1f}" width="{chart_w:.1f}" height="{panel_h*0.25:.1f}" fill="url(#ground_fog)"/>')
 
