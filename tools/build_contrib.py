@@ -79,28 +79,36 @@ def render_lantern(px, py, theme):
 
 
 def render_torii(px, py, theme):
-    """Renders a simple Torii gate silhouette near the start of the mountain path as a distant landmark."""
+    """Renders a vibrant Vermilion Japanese Torii gate framing the mountain path entrance."""
     parts = []
-    is_dark = theme.get('is_dark', True)
-    color = theme.get('trunk', '#5C524E') if is_dark else '#C85A3D'
+    vermilion = '#D44A32'   # Traditional Vermilion Torii Red
+    dark_cap = '#1A1420'    # Dark charcoal for base pads and top roof cap
 
-    # Simple torii silhouette (~16-18px tall)
-    # 2 vertical posts (Hashira)
-    parts.append(f'<line x1="{px - 4.5:.1f}" y1="{py:.1f}" x2="{px - 4.0:.1f}" y2="{py - 14.5:.1f}" stroke="{color}" stroke-width="1.4" stroke-linecap="square" opacity="0.55"/>')
-    parts.append(f'<line x1="{px + 4.5:.1f}" y1="{py:.1f}" x2="{px + 4.0:.1f}" y2="{py - 14.5:.1f}" stroke="{color}" stroke-width="1.4" stroke-linecap="square" opacity="0.55"/>')
+    # Torii Gate (~24px tall, ~22px wide)
+    # Base foundation pads (Koshimaki)
+    parts.append(f'<rect x="{px - 7.5:.1f}" y="{py - 2.0:.1f}" width="3" height="2" fill="{dark_cap}"/>')
+    parts.append(f'<rect x="{px + 4.5:.1f}" y="{py - 2.0:.1f}" width="3" height="2" fill="{dark_cap}"/>')
+
+    # Two main vertical posts (Hashira) angled slightly inwards
+    parts.append(f'<line x1="{px - 6.0:.1f}" y1="{py - 2.0:.1f}" x2="{px - 5.0:.1f}" y2="{py - 20.0:.1f}" stroke="{vermilion}" stroke-width="2.2" stroke-linecap="square"/>')
+    parts.append(f'<line x1="{px + 6.0:.1f}" y1="{py - 2.0:.1f}" x2="{px + 5.0:.1f}" y2="{py - 20.0:.1f}" stroke="{vermilion}" stroke-width="2.2" stroke-linecap="square"/>')
 
     # Lower crossbar (Nuki)
-    parts.append(f'<line x1="{px - 6.0:.1f}" y1="{py - 9.5:.1f}" x2="{px + 6.0:.1f}" y2="{py - 9.5:.1f}" stroke="{color}" stroke-width="1.2" opacity="0.55"/>')
+    parts.append(f'<line x1="{px - 9.0:.1f}" y1="{py - 13.0:.1f}" x2="{px + 9.0:.1f}" y2="{py - 13.0:.1f}" stroke="{vermilion}" stroke-width="1.8"/>')
 
     # Secondary upper bar (Shimaki)
-    parts.append(f'<line x1="{px - 6.5:.1f}" y1="{py - 13.0:.1f}" x2="{px + 6.5:.1f}" y2="{py - 13.0:.1f}" stroke="{color}" stroke-width="1.2" opacity="0.55"/>')
+    parts.append(f'<line x1="{px - 8.0:.1f}" y1="{py - 18.0:.1f}" x2="{px + 8.0:.1f}" y2="{py - 18.0:.1f}" stroke="{vermilion}" stroke-width="1.8"/>')
 
-    # Upper main crossbar / Kasagi (curved top lintel)
-    kasagi_d = f"M {px - 8.0:.1f},{py - 14.5:.1f} Q {px:.1f},{py - 13.8:.1f} {px + 8.0:.1f},{py - 14.5:.1f}"
-    parts.append(f'<path d="{kasagi_d}" stroke="{color}" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.55"/>')
+    # Upper main curved lintel (Kasagi) with upturned ends
+    kasagi_d = f"M {px - 11.5:.1f},{py - 20.5:.1f} Q {px:.1f},{py - 19.2:.1f} {px + 11.5:.1f},{py - 20.5:.1f}"
+    parts.append(f'<path d="{kasagi_d}" stroke="{vermilion}" stroke-width="2.6" stroke-linecap="round" fill="none"/>')
 
-    # Center vertical strut (Gakuzuka)
-    parts.append(f'<line x1="{px:.1f}" y1="{py - 13.8:.1f}" x2="{px:.1f}" y2="{py - 9.5:.1f}" stroke="{color}" stroke-width="1.0" opacity="0.55"/>')
+    # Top dark protective roof cap over Kasagi
+    cap_d = f"M {px - 12.0:.1f},{py - 21.8:.1f} Q {px:.1f},{py - 20.5:.1f} {px + 12.0:.1f},{py - 21.8:.1f}"
+    parts.append(f'<path d="{cap_d}" stroke="{dark_cap}" stroke-width="1.2" stroke-linecap="round" fill="none"/>')
+
+    # Center vertical tablet strut (Gakuzuka / Plaque)
+    parts.append(f'<rect x="{px - 1.2:.1f}" y="{py - 18.0:.1f}" width="2.4" height="5.0" fill="{dark_cap}"/>')
 
     return ''.join(parts)
 
@@ -221,16 +229,16 @@ def render_background_scenery(theme, chart_w, panel_h):
             f'</g>'
         )
 
-        # Small owl silhouette perched on near mountain ridge point
+        # Sharp black owl silhouette perched on near mountain ridge point
         ox, oy = chart_w * 0.82, panel_h * 0.46
-        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 2.2:.1f}" r="2.2" fill="{far_mtn}" opacity="0.80"/>')
-        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 5.0:.1f}" r="1.6" fill="{far_mtn}" opacity="0.80"/>')
-        ear_l = f"M {ox - 1.5:.1f},{oy - 5.6:.1f} L {ox - 0.6:.1f},{oy - 7.2:.1f} L {ox - 0.2:.1f},{oy - 5.6:.1f} Z"
-        ear_r = f"M {ox + 1.5:.1f},{oy - 5.6:.1f} L {ox + 0.6:.1f},{oy - 7.2:.1f} L {ox + 0.2:.1f},{oy - 5.6:.1f} Z"
-        parts.append(f'<path d="{ear_l}" fill="{far_mtn}" opacity="0.80"/>')
-        parts.append(f'<path d="{ear_r}" fill="{far_mtn}" opacity="0.80"/>')
-        parts.append(f'<circle cx="{ox - 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="{low_color}" opacity="0.60"/>')
-        parts.append(f'<circle cx="{ox + 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="{low_color}" opacity="0.60"/>')
+        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 2.8:.1f}" r="2.8" fill="#070A10" opacity="0.95"/>')
+        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 6.2:.1f}" r="2.0" fill="#070A10" opacity="0.95"/>')
+        ear_l = f"M {ox - 1.8:.1f},{oy - 7.0:.1f} L {ox - 0.7:.1f},{oy - 9.0:.1f} L {ox - 0.2:.1f},{oy - 7.0:.1f} Z"
+        ear_r = f"M {ox + 1.8:.1f},{oy - 7.0:.1f} L {ox + 0.7:.1f},{oy - 9.0:.1f} L {ox + 0.2:.1f},{oy - 7.0:.1f} Z"
+        parts.append(f'<path d="{ear_l}" fill="#070A10" opacity="0.95"/>')
+        parts.append(f'<path d="{ear_r}" fill="#070A10" opacity="0.95"/>')
+        parts.append(f'<circle cx="{ox - 0.8:.1f}" cy="{oy - 6.3:.1f}" r="0.6" fill="#FFDF9E" opacity="0.90"/>')
+        parts.append(f'<circle cx="{ox + 0.8:.1f}" cy="{oy - 6.3:.1f}" r="0.6" fill="#FFDF9E" opacity="0.90"/>')
 
     else:
         sx, sy = chart_w * 0.86, panel_h * 0.24
@@ -266,17 +274,6 @@ def render_background_scenery(theme, chart_w, panel_h):
             bx, by = chart_w * bx_r, panel_h * by_r
             b_d = f"M {bx:.1f},{by:.1f} Q {bx+4:.1f},{by-4:.1f} {bx+8:.1f},{by:.1f} Q {bx+12:.1f},{by-4:.1f} {bx+16:.1f},{by:.1f}"
             parts.append(f'<path d="{b_d}" stroke="#8C6D58" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.60"/>')
-
-        # Small owl silhouette perched on near mountain ridge point
-        ox, oy = chart_w * 0.82, panel_h * 0.46
-        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 2.2:.1f}" r="2.2" fill="#5C4A42" opacity="0.80"/>')
-        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 5.0:.1f}" r="1.6" fill="#5C4A42" opacity="0.80"/>')
-        ear_l = f"M {ox - 1.5:.1f},{oy - 5.6:.1f} L {ox - 0.6:.1f},{oy - 7.2:.1f} L {ox - 0.2:.1f},{oy - 5.6:.1f} Z"
-        ear_r = f"M {ox + 1.5:.1f},{oy - 5.6:.1f} L {ox + 0.6:.1f},{oy - 7.2:.1f} L {ox + 0.2:.1f},{oy - 5.6:.1f} Z"
-        parts.append(f'<path d="{ear_l}" fill="#5C4A42" opacity="0.80"/>')
-        parts.append(f'<path d="{ear_r}" fill="#5C4A42" opacity="0.80"/>')
-        parts.append(f'<circle cx="{ox - 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="#C85A3D" opacity="0.70"/>')
-        parts.append(f'<circle cx="{ox + 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="#C85A3D" opacity="0.70"/>')
 
     # Soft horizontal ground fog band
     parts.append(f'<rect x="0" y="{panel_h*0.75:.1f}" width="{chart_w:.1f}" height="{panel_h*0.25:.1f}" fill="url(#ground_fog)"/>')
@@ -366,6 +363,11 @@ def render_chart(weeks, theme, tile_w, tile_h):
             minx, maxx = min(minx, px - 6), max(maxx, px + 6)
             miny, maxy = min(miny, py - 6), max(maxy, py + 6)
 
+        # Vermilion Torii Gate framing the entrance of the mountain path
+        if len(path_line_pts) > 3:
+            t_x, t_y = path_line_pts[3]
+            parts.append(render_torii(t_x + 2.0, t_y + 4.0, theme))
+
     # 3. Sort trees back-to-front by vertical position (pos_y) for proper occlusion
     day_nodes.sort(key=lambda item: item['pos_y'])
 
@@ -375,10 +377,6 @@ def render_chart(weeks, theme, tile_w, tile_h):
         d = item['day']
         px, py = item['pos_x'], item['pos_y']
         c = d['contributionCount']
-
-        # Torii gate landmark near path entrance
-        if i == 3:
-            parts.append(render_torii(px - 9.0, py - 2.0, theme))
 
         # Japanese stone lanterns (Tōrō) along roadside
         if i in (18, 72, 135, 205, 270, 330):
