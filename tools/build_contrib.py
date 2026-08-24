@@ -78,10 +78,39 @@ def render_lantern(px, py, theme):
     return ''.join(parts)
 
 
+def render_torii(px, py, theme):
+    """Renders a simple Torii gate silhouette near the start of the mountain path as a distant landmark."""
+    parts = []
+    is_dark = theme.get('is_dark', True)
+    color = theme.get('trunk', '#5C524E') if is_dark else '#C85A3D'
+
+    # Simple torii silhouette (~16-18px tall)
+    # 2 vertical posts (Hashira)
+    parts.append(f'<line x1="{px - 4.5:.1f}" y1="{py:.1f}" x2="{px - 4.0:.1f}" y2="{py - 14.5:.1f}" stroke="{color}" stroke-width="1.4" stroke-linecap="square" opacity="0.55"/>')
+    parts.append(f'<line x1="{px + 4.5:.1f}" y1="{py:.1f}" x2="{px + 4.0:.1f}" y2="{py - 14.5:.1f}" stroke="{color}" stroke-width="1.4" stroke-linecap="square" opacity="0.55"/>')
+
+    # Lower crossbar (Nuki)
+    parts.append(f'<line x1="{px - 6.0:.1f}" y1="{py - 9.5:.1f}" x2="{px + 6.0:.1f}" y2="{py - 9.5:.1f}" stroke="{color}" stroke-width="1.2" opacity="0.55"/>')
+
+    # Secondary upper bar (Shimaki)
+    parts.append(f'<line x1="{px - 6.5:.1f}" y1="{py - 13.0:.1f}" x2="{px + 6.5:.1f}" y2="{py - 13.0:.1f}" stroke="{color}" stroke-width="1.2" opacity="0.55"/>')
+
+    # Upper main crossbar / Kasagi (curved top lintel)
+    kasagi_d = f"M {px - 8.0:.1f},{py - 14.5:.1f} Q {px:.1f},{py - 13.8:.1f} {px + 8.0:.1f},{py - 14.5:.1f}"
+    parts.append(f'<path d="{kasagi_d}" stroke="{color}" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.55"/>')
+
+    # Center vertical strut (Gakuzuka)
+    parts.append(f'<line x1="{px:.1f}" y1="{py - 13.8:.1f}" x2="{px:.1f}" y2="{py - 9.5:.1f}" stroke="{color}" stroke-width="1.0" opacity="0.55"/>')
+
+    return ''.join(parts)
+
+
 def render_background_scenery(theme, chart_w, panel_h):
     """Renders distant mountain silhouettes, celestial body (Moon in Dark Mode, Sun in Light Mode), stars/clouds and birds."""
     parts = []
     is_dark = theme.get('is_dark', True)
+    low_color = theme.get('low', '#F5D6B8')
+    bg_color = theme.get('bg', '#0D1117')
 
     # Gradient defs for smooth glow without concentric circle rings
     defs = [
@@ -96,6 +125,14 @@ def render_background_scenery(theme, chart_w, panel_h):
         '    <stop offset="45%" stop-color="#E8946B" stop-opacity="0.20"/>',
         '    <stop offset="100%" stop-color="#E8946B" stop-opacity="0"/>',
         '  </radialGradient>',
+        '  <radialGradient id="firefly_glow" cx="50%" cy="50%" r="50%">',
+        f'    <stop offset="0%" stop-color="{low_color}" stop-opacity="0.60"/>',
+        f'    <stop offset="100%" stop-color="{low_color}" stop-opacity="0"/>',
+        '  </radialGradient>',
+        '  <linearGradient id="ground_fog" x1="0%" y1="0%" x2="0%" y2="100%">',
+        f'    <stop offset="0%" stop-color="{bg_color}" stop-opacity="0"/>',
+        f'    <stop offset="100%" stop-color="{bg_color}" stop-opacity="0.40"/>',
+        '  </linearGradient>',
         '</defs>'
     ]
     parts.append(''.join(defs))
@@ -154,6 +191,47 @@ def render_background_scenery(theme, chart_w, panel_h):
             s_d = f"M {spx:.1f},{spy-sp_sz:.1f} Q {spx:.1f},{spy:.1f} {spx+sp_sz:.1f},{spy:.1f} Q {spx:.1f},{spy:.1f} {spx:.1f},{spy+sp_sz:.1f} Q {spx:.1f},{spy:.1f} {spx-sp_sz:.1f},{spy:.1f} Q {spx:.1f},{spy:.1f} {spx:.1f},{spy-sp_sz:.1f}"
             parts.append(f'<path d="{s_d}" fill="{celestial_color}" opacity="0.85"/>')
 
+        # Firefly dots scattered in lower-mid area near tree line
+        fireflies = [
+            (0.12, 0.62, 1.1, "2.8s", "0.2s"),
+            (0.24, 0.75, 0.9, "3.4s", "1.1s"),
+            (0.38, 0.58, 1.3, "2.3s", "0.6s"),
+            (0.52, 0.70, 1.0, "3.1s", "1.8s"),
+            (0.67, 0.61, 1.4, "2.6s", "0.4s"),
+            (0.79, 0.78, 0.8, "3.8s", "1.3s"),
+            (0.88, 0.65, 1.2, "2.9s", "2.1s")
+        ]
+        for fx_r, fy_r, fr, dur, begin in fireflies:
+            fx, fy = chart_w * fx_r, panel_h * fy_r
+            parts.append(
+                f'<g>'
+                f'<animate attributeName="opacity" values="0.2;0.9;0.2" dur="{dur}" begin="{begin}" repeatCount="indefinite"/>'
+                f'<circle cx="{fx:.1f}" cy="{fy:.1f}" r="4" fill="url(#firefly_glow)"/>'
+                f'<circle cx="{fx:.1f}" cy="{fy:.1f}" r="{fr}" fill="{low_color}"/>'
+                f'</g>'
+            )
+
+        # Rare shooting star / meteor streak in top-right quadrant
+        ss_x, ss_y = chart_w * 0.78, panel_h * 0.14
+        parts.append(
+            f'<g transform="translate({ss_x:.1f},{ss_y:.1f})" opacity="0">'
+            f'<animate attributeName="opacity" values="0;0;0.8;0" keyTimes="0;0.65;0.75;1" dur="12s" begin="2s" repeatCount="indefinite"/>'
+            f'<animateTransform attributeName="transform" type="translate" values="0 0; 0 0; -45 26; -60 35" keyTimes="0;0.65;0.75;1" dur="12s" begin="2s" repeatCount="indefinite" additive="sum"/>'
+            f'<line x1="0" y1="0" x2="-26" y2="15" stroke="{celestial_color}" stroke-width="1" stroke-linecap="round"/>'
+            f'</g>'
+        )
+
+        # Small owl silhouette perched on near mountain ridge point
+        ox, oy = chart_w * 0.82, panel_h * 0.46
+        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 2.2:.1f}" r="2.2" fill="{far_mtn}" opacity="0.80"/>')
+        parts.append(f'<circle cx="{ox:.1f}" cy="{oy - 5.0:.1f}" r="1.6" fill="{far_mtn}" opacity="0.80"/>')
+        ear_l = f"M {ox - 1.5:.1f},{oy - 5.6:.1f} L {ox - 0.6:.1f},{oy - 7.2:.1f} L {ox - 0.2:.1f},{oy - 5.6:.1f} Z"
+        ear_r = f"M {ox + 1.5:.1f},{oy - 5.6:.1f} L {ox + 0.6:.1f},{oy - 7.2:.1f} L {ox + 0.2:.1f},{oy - 5.6:.1f} Z"
+        parts.append(f'<path d="{ear_l}" fill="{far_mtn}" opacity="0.80"/>')
+        parts.append(f'<path d="{ear_r}" fill="{far_mtn}" opacity="0.80"/>')
+        parts.append(f'<circle cx="{ox - 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="{low_color}" opacity="0.60"/>')
+        parts.append(f'<circle cx="{ox + 0.6:.1f}" cy="{oy - 5.1:.1f}" r="0.5" fill="{low_color}" opacity="0.60"/>')
+
     else:
         sx, sy = chart_w * 0.86, panel_h * 0.24
         # Smooth continuous radial glow (No target rings!)
@@ -188,6 +266,40 @@ def render_background_scenery(theme, chart_w, panel_h):
             bx, by = chart_w * bx_r, panel_h * by_r
             b_d = f"M {bx:.1f},{by:.1f} Q {bx+4:.1f},{by-4:.1f} {bx+8:.1f},{by:.1f} Q {bx+12:.1f},{by-4:.1f} {bx+16:.1f},{by:.1f}"
             parts.append(f'<path d="{b_d}" stroke="#8C6D58" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.60"/>')
+
+    # Soft horizontal ground fog band
+    parts.append(f'<rect x="0" y="{panel_h*0.75:.1f}" width="{chart_w:.1f}" height="{panel_h*0.25:.1f}" fill="url(#ground_fog)"/>')
+
+    return ''.join(parts)
+
+
+def render_falling_petals(theme, chart_w, panel_h):
+    """Renders small falling sakura petals floating across the top half of the panel."""
+    ramp = theme.get('ramp', ['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F'])
+    is_dark = theme.get('is_dark', True)
+    petal_fill = ramp[0] if is_dark else ramp[1]
+
+    # 6 small petals scattered across top half of panel
+    # (x_ratio, y_ratio, dx, dy, rot_from, rot_to, dur, begin, opacity)
+    petals = [
+        (0.14, 0.12, 18, 22, -15, 35, "7.5s", "0.0s", 0.65),
+        (0.28, 0.25, 22, 20, 10, -40, "9.0s", "1.5s", 0.75),
+        (0.45, 0.10, 15, 24, -20, 25, "6.8s", "0.8s", 0.55),
+        (0.62, 0.32, 20, 18, 0, 45, "8.2s", "2.2s", 0.70),
+        (0.78, 0.16, 17, 25, -30, 15, "7.0s", "1.0s", 0.60),
+        (0.90, 0.28, 24, 21, 15, -35, "8.6s", "2.8s", 0.80)
+    ]
+
+    parts = []
+    for px_r, py_r, dx, dy, r1, r2, dur, begin, op in petals:
+        px, py = chart_w * px_r, panel_h * py_r
+        parts.append(
+            f'<g transform="translate({px:.1f},{py:.1f})">'
+            f'<animateTransform attributeName="transform" type="translate" values="0 0; {dx} {dy}; 0 0" dur="{dur}" begin="{begin}" repeatCount="indefinite" additive="sum"/>'
+            f'<animateTransform attributeName="transform" type="rotate" values="{r1}; {r2}; {r1}" dur="{dur}" begin="{begin}" repeatCount="indefinite" additive="sum"/>'
+            f'<ellipse cx="0" cy="0" rx="1.5" ry="1.0" fill="{petal_fill}" opacity="{op:.2f}"/>'
+            f'</g>'
+        )
 
     return ''.join(parts)
 
@@ -252,6 +364,10 @@ def render_chart(weeks, theme, tile_w, tile_h):
         d = item['day']
         px, py = item['pos_x'], item['pos_y']
         c = d['contributionCount']
+
+        # Torii gate landmark near path entrance
+        if i == 3:
+            parts.append(render_torii(px - 9.0, py - 2.0, theme))
 
         # Japanese stone lanterns (Tōrō) along roadside
         if i in (18, 72, 135, 205, 270, 330):
@@ -536,6 +652,10 @@ def render_widget(theme, card_width, weeks):
     # Background Scenery (Mountain Silhouettes, Crescent Moon / Sun, Stars / Clouds & Birds)
     bg_scenery = render_background_scenery(theme, avail_w, panel_h)
     parts.append(f'<g id="bg_landscape">{bg_scenery}</g>')
+
+    # Falling Sakura Petals (sitting behind trees/chart)
+    falling_petals = render_falling_petals(theme, avail_w, panel_h)
+    parts.append(f'<g id="falling_petals">{falling_petals}</g>')
 
     # Vertically center the S-curve chart in the full panel height
     chart_y = max(0.0, (panel_h - ch) / 2.0)
