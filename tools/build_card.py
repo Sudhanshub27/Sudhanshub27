@@ -17,9 +17,9 @@ WIDGET_BOTTOM_PAD = 20
 
 THEMES = {
     'card_dark.svg': dict(
-        bg='#0D1117', card_bg='#17121C', border='#4A3040',
+        bg='#0D1117', card_bg='#161B22', border='#30363D',
         hdr='#F5E6D3', label='#C9A896', val='#E8CBB0',
-        subtext='#C9A896', sep='#5A4A52', add='#C85A3D', dele='#7A2E1F'
+        subtext='#C9A896', sep='#30363D', add='#C85A3D', dele='#7A2E1F'
     ),
     'card_light.svg': dict(
         bg='#FAF5F0', card_bg='#F2E8E0', border='#D8C2D3',
@@ -41,6 +41,30 @@ def uptime(birth=datetime.date(2004, 9, 27), today=None):
     d = relativedelta.relativedelta(today, birth)
     p = lambda n, u: f"{n} {u}{'s' if n != 1 else ''}"
     return f"{p(d.years,'year')}, {p(d.months,'month')}, {p(d.days,'day')}"
+
+
+def make_default_weeks():
+    today = datetime.date.today()
+    start_date = today - datetime.timedelta(days=364)
+    start_date = start_date - datetime.timedelta(days=(start_date.weekday() + 1) % 7)
+    weeks = []
+    curr = start_date
+    while curr <= today:
+        week_days = []
+        for _ in range(7):
+            if curr <= today:
+                d_idx = (curr - start_date).days
+                c_count = 0
+                if d_idx % 3 != 0 or d_idx % 5 == 0:
+                    c_count = ((d_idx * 7 + 13) % 11)
+                week_days.append({
+                    'date': curr.isoformat(),
+                    'contributionCount': c_count,
+                    'weekday': (curr.weekday() + 1) % 7
+                })
+            curr += datetime.timedelta(days=1)
+        weeks.append({'contributionDays': week_days})
+    return weeks
 
 
 def build(theme_file):
@@ -134,10 +158,12 @@ def build(theme_file):
             out.append(f'<text x="{cx + 18}" y="{ry}" font-size="12" fill="{t["label"]}">{escape(lbl_text)}</text>')
             out.append(f'<text x="{val_x}" y="{ry}" font-size="12" fill="{t["val"]}"{id_attr}>{escape(val)}</text>')
 
-    # Activity widget container -- today.py updates this group
+    # Activity widget container -- pre-populated with default calendar data
     divider_y = CARD_H + WIDGET_GAP / 2
     out.append(f'<line x1="25" y1="{divider_y}" x2="{W-25}" y2="{divider_y}" stroke="{t["border"]}" stroke-width="1" opacity="0.4"/>')
-    out.append(f'<g id="activity_widget" transform="translate({build_contrib.MARGIN},{CARD_H+WIDGET_GAP})"></g>')
+    default_weeks = make_default_weeks()
+    widget_svg = build_contrib.render_widget(build_contrib.WIDGET_THEMES[theme_file], W, default_weeks)
+    out.append(f'<g id="activity_widget" transform="translate({build_contrib.MARGIN},{CARD_H+WIDGET_GAP})">{widget_svg}</g>')
 
     out.append('</svg>')
     return '\n'.join(out) + '\n'

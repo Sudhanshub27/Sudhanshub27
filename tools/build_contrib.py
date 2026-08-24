@@ -16,10 +16,12 @@ FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
 
 WIDGET_THEMES = {
     'card_dark.svg': dict(
-        fg='#F5E6D3', label='#C9A896', val='#E8CBB0', accent='#C85A3D', border='#4A3040', bg='#0D1117',
-        empty='#4A3E4F', low='#F5D6B8', high='#7A2E1F', trunk='#5A4A52', path='#2B2032',
+        is_dark=True,
+        fg='#F5E6D3', label='#C9A896', val='#E8CBB0', accent='#C85A3D', border='#30363D', bg='#0D1117',
+        empty='#21262D', low='#F5D6B8', high='#7A2E1F', trunk='#5C524E', path='#21262D',
         ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
     'card_light.svg': dict(
+        is_dark=False,
         fg='#4A3040', label='#8C6D58', val='#A85A3D', accent='#C85A3D', border='#D8C2D3', bg='#FAF5F0',
         empty='#C4B0C2', low='#F5D6B8', high='#7A2E1F', trunk='#6B5963', path='#F0E5EF',
         ramp=['#F5D6B8', '#E8946B', '#C85A3D', '#7A2E1F']),
@@ -54,6 +56,140 @@ def shade(hex_color, factor):
     r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
     r, g, b = (max(0, min(255, int(c * factor))) for c in (r, g, b))
     return f'#{r:02x}{g:02x}{b:02x}'
+
+
+def render_lantern(px, py, theme):
+    """Renders a small glowing Japanese stone lantern (Tōrō) along the mountain path."""
+    parts = []
+    is_dark = theme.get('is_dark', True)
+    glow_color = '#F5D6B8' if is_dark else '#E8946B'
+    stone_color = theme.get('trunk', '#5C524E')
+
+    # Soft glowing light aura
+    parts.append(f'<circle cx="{px:.1f}" cy="{py - 7:.1f}" r="9" fill="{glow_color}" opacity="{0.30 if is_dark else 0.15}"/>')
+    parts.append(f'<circle cx="{px:.1f}" cy="{py - 7:.1f}" r="4" fill="{glow_color}" opacity="{0.75 if is_dark else 0.45}"/>')
+    # Post & Base
+    parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px:.1f}" y2="{py - 5:.1f}" stroke="{stone_color}" stroke-width="1.4" stroke-linecap="round"/>')
+    # Firebox window
+    parts.append(f'<rect x="{px - 2.5:.1f}" y="{py - 8.5:.1f}" width="5" height="4" rx="0.5" fill="{stone_color}"/>')
+    parts.append(f'<circle cx="{px:.1f}" cy="{py - 6.5:.1f}" r="1.2" fill="{glow_color}"/>')
+    # Pagoda roof cap
+    parts.append(f'<path d="M {px - 4.5:.1f},{py - 8.5:.1f} L {px:.1f},{py - 11.5:.1f} L {px + 4.5:.1f},{py - 8.5:.1f} Z" fill="{stone_color}"/>')
+    return ''.join(parts)
+
+
+def render_background_scenery(theme, chart_w, panel_h):
+    """Renders distant mountain silhouettes, celestial body (Moon in Dark Mode, Sun in Light Mode), stars/clouds and birds."""
+    parts = []
+    is_dark = theme.get('is_dark', True)
+
+    # Gradient defs for smooth glow without concentric circle rings
+    defs = [
+        '<defs>',
+        '  <radialGradient id="moon_glow" cx="50%" cy="50%" r="50%">',
+        '    <stop offset="0%" stop-color="#F5E6D3" stop-opacity="0.35"/>',
+        '    <stop offset="45%" stop-color="#F5E6D3" stop-opacity="0.10"/>',
+        '    <stop offset="100%" stop-color="#F5E6D3" stop-opacity="0"/>',
+        '  </radialGradient>',
+        '  <radialGradient id="sun_glow" cx="50%" cy="50%" r="50%">',
+        '    <stop offset="0%" stop-color="#F5D6B8" stop-opacity="0.55"/>',
+        '    <stop offset="45%" stop-color="#E8946B" stop-opacity="0.20"/>',
+        '    <stop offset="100%" stop-color="#E8946B" stop-opacity="0"/>',
+        '  </radialGradient>',
+        '</defs>'
+    ]
+    parts.append(''.join(defs))
+
+    # 1. Distant Mountain Range Silhouettes
+    if is_dark:
+        far_mtn = '#131822'
+        near_mtn = '#181E2A'
+        celestial_color = '#F5E6D3'
+    else:
+        far_mtn = '#EFE4DA'
+        near_mtn = '#E6D9CE'
+        celestial_color = '#E8946B'
+
+    # Far mountain range
+    d_far = f"M 0,{panel_h*0.70:.1f} Q {chart_w*0.18:.1f},{panel_h*0.30:.1f} {chart_w*0.38:.1f},{panel_h*0.52:.1f} T {chart_w*0.72:.1f},{panel_h*0.35:.1f} T {chart_w:.1f},{panel_h*0.48:.1f} L {chart_w:.1f},{panel_h:.1f} L 0,{panel_h:.1f} Z"
+    parts.append(f'<path d="{d_far}" fill="{far_mtn}" opacity="0.60"/>')
+
+    # Near mountain range
+    d_near = f"M 0,{panel_h*0.80:.1f} Q {chart_w*0.28:.1f},{panel_h*0.48:.1f} {chart_w*0.52:.1f},{panel_h*0.62:.1f} T {chart_w*0.82:.1f},{panel_h*0.46:.1f} T {chart_w:.1f},{panel_h*0.58:.1f} L {chart_w:.1f},{panel_h:.1f} L 0,{panel_h:.1f} Z"
+    parts.append(f'<path d="{d_near}" fill="{near_mtn}" opacity="0.45"/>')
+
+    # 2. Celestial Object (Moon in Dark Mode, Sun in Light Mode)
+    if is_dark:
+        mx, my = chart_w * 0.86, panel_h * 0.22
+        # Smooth continuous radial glow (No target rings!)
+        parts.append(f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="45" fill="url(#moon_glow)"/>')
+
+        # Pure SVG Crescent Moon path
+        moon_d = (
+            f"M {mx:.1f},{my-15.0:.1f} "
+            f"A 15 15 0 1 0 {mx+11.0:.1f},{my+10.0:.1f} "
+            f"A 13 13 0 1 1 {mx:.1f},{my-15.0:.1f} Z"
+        )
+        parts.append(f'<path d="{moon_d}" fill="{celestial_color}" opacity="0.95"/>')
+
+        # Subtle craters on crescent
+        parts.append(f'<circle cx="{mx-6.0:.1f}" cy="{my+2.0:.1f}" r="1.5" fill="#C9A896" opacity="0.35"/>')
+        parts.append(f'<circle cx="{mx-3.0:.1f}" cy="{my-5.0:.1f}" r="1.2" fill="#C9A896" opacity="0.30"/>')
+
+        # Stars in night sky
+        stars = [
+            (0.06, 0.12, 1.2, 0.75), (0.16, 0.20, 0.9, 0.50), (0.26, 0.08, 1.5, 0.85),
+            (0.36, 0.22, 1.0, 0.60), (0.44, 0.10, 1.4, 0.75), (0.54, 0.18, 0.8, 0.45),
+            (0.64, 0.06, 1.3, 0.80), (0.74, 0.16, 1.1, 0.65), (0.92, 0.10, 1.4, 0.80),
+            (0.96, 0.26, 0.9, 0.50), (0.10, 0.32, 0.8, 0.40), (0.48, 0.28, 1.0, 0.55)
+        ]
+        for sx_r, sy_r, sr, sop in stars:
+            sx, sy = chart_w * sx_r, panel_h * sy_r
+            parts.append(f'<circle cx="{sx:.1f}" cy="{sy:.1f}" r="{sr}" fill="{celestial_color}" opacity="{sop}"/>')
+
+        # 4-point sparkle stars
+        sparkles = [(0.26, 0.08, 6), (0.64, 0.06, 7), (0.44, 0.10, 5)]
+        for spx_r, spy_r, sp_sz in sparkles:
+            spx, spy = chart_w * spx_r, panel_h * spy_r
+            s_d = f"M {spx:.1f},{spy-sp_sz:.1f} Q {spx:.1f},{spy:.1f} {spx+sp_sz:.1f},{spy:.1f} Q {spx:.1f},{spy:.1f} {spx:.1f},{spy+sp_sz:.1f} Q {spx:.1f},{spy:.1f} {spx-sp_sz:.1f},{spy:.1f} Q {spx:.1f},{spy:.1f} {spx:.1f},{spy-sp_sz:.1f}"
+            parts.append(f'<path d="{s_d}" fill="{celestial_color}" opacity="0.85"/>')
+
+    else:
+        sx, sy = chart_w * 0.86, panel_h * 0.24
+        # Smooth continuous radial glow (No target rings!)
+        parts.append(f'<circle cx="{sx:.1f}" cy="{sy:.1f}" r="48" fill="url(#sun_glow)"/>')
+
+        # Sun Disk
+        parts.append(f'<circle cx="{sx:.1f}" cy="{sy:.1f}" r="14" fill="#C85A3D" opacity="0.85"/>')
+        parts.append(f'<circle cx="{sx:.1f}" cy="{sy:.1f}" r="11" fill="#F5D6B8" opacity="0.95"/>')
+
+        # Delicate Sunburst Rays (8 radiating rays)
+        for angle in (0, 45, 90, 135, 180, 225, 270, 315):
+            rad = math.radians(angle)
+            x1 = sx + 17 * math.cos(rad)
+            y1 = sy + 17 * math.sin(rad)
+            x2 = sx + 25 * math.cos(rad)
+            y2 = sy + 25 * math.sin(rad)
+            parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="#E8946B" stroke-width="1.2" stroke-linecap="round" opacity="0.55"/>')
+
+        # Morning clouds
+        clouds = [
+            (chart_w * 0.12, panel_h * 0.18),
+            (chart_w * 0.42, panel_h * 0.12),
+            (chart_w * 0.68, panel_h * 0.28)
+        ]
+        for cx_c, cy_c in clouds:
+            c_d = f"M {cx_c:.1f},{cy_c:.1f} a 8,8 0 0,1 12,-4 a 12,12 0 0,1 18,2 a 8,8 0 0,1 10,8 L {cx_c-4:.1f},{cy_c+6:.1f} Z"
+            parts.append(f'<path d="{c_d}" fill="#C4B0C2" opacity="0.35"/>')
+
+        # Birds flying in sky
+        birds = [(0.22, 0.14), (0.26, 0.11), (0.58, 0.20)]
+        for bx_r, by_r in birds:
+            bx, by = chart_w * bx_r, panel_h * by_r
+            b_d = f"M {bx:.1f},{by:.1f} Q {bx+4:.1f},{by-4:.1f} {bx+8:.1f},{by:.1f} Q {bx+12:.1f},{by-4:.1f} {bx+16:.1f},{by:.1f}"
+            parts.append(f'<path d="{b_d}" stroke="#8C6D58" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.60"/>')
+
+    return ''.join(parts)
 
 
 def render_chart(weeks, theme, tile_w, tile_h):
@@ -116,6 +252,10 @@ def render_chart(weeks, theme, tile_w, tile_h):
         d = item['day']
         px, py = item['pos_x'], item['pos_y']
         c = d['contributionCount']
+
+        # Japanese stone lanterns (Tōrō) along roadside
+        if i in (18, 72, 135, 205, 270, 330):
+            parts.append(render_lantern(px + 9.0, py + 2.0, theme))
 
         if c == 0:
             # Empty day: small faint dot on path
@@ -392,6 +532,10 @@ def render_widget(theme, card_width, weeks):
     stats = compute_stats(days)
 
     parts = [f'<g font-family="{FONT}">']
+
+    # Background Scenery (Mountain Silhouettes, Crescent Moon / Sun, Stars / Clouds & Birds)
+    bg_scenery = render_background_scenery(theme, avail_w, panel_h)
+    parts.append(f'<g id="bg_landscape">{bg_scenery}</g>')
 
     # Vertically center the S-curve chart in the full panel height
     chart_y = max(0.0, (panel_h - ch) / 2.0)
