@@ -521,8 +521,11 @@ def render_chart(weeks, theme, tile_w, tile_h):
 
 def compute_stats(days):
     """Total, best day, and longest/current streaks from a chronological list of days."""
+    import datetime
+    today_str = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+
     total = sum(d['contributionCount'] for d in days)
-    best = max(days, key=lambda d: d['contributionCount'])
+    best = max(days, key=lambda d: d['contributionCount']) if days else {'contributionCount': 0, 'date': ''}
 
     longest_len, longest_start, longest_end = 0, None, None
     run_start, run = None, 0
@@ -536,19 +539,33 @@ def compute_stats(days):
         else:
             run = 0
 
-    idx = len(days) - 1
-    if days[idx]['contributionCount'] == 0:
-        idx -= 1
-    current_len, current_start, current_end = 0, None, days[idx]['date'] if idx >= 0 else None
-    while idx >= 0 and days[idx]['contributionCount'] > 0:
-        current_start = days[idx]['date']
+    valid_days = [d for d in days if d['date'] <= today_str]
+    if not valid_days:
+        valid_days = days
+
+    idx = len(valid_days) - 1
+
+    # If today has 0 contributions so far, check if yesterday had contributions to keep current streak active
+    if valid_days[idx]['contributionCount'] == 0 and idx > 0:
+        if valid_days[idx]['date'] == today_str and valid_days[idx - 1]['contributionCount'] > 0:
+            idx -= 1
+
+    current_len, current_start, current_end = 0, None, valid_days[idx]['date'] if idx >= 0 and valid_days[idx]['contributionCount'] > 0 else None
+
+    scan_idx = idx
+    while scan_idx >= 0 and valid_days[scan_idx]['contributionCount'] > 0:
+        current_start = valid_days[scan_idx]['date']
         current_len += 1
-        idx -= 1
+        scan_idx -= 1
+
+    if current_len == 0:
+        current_start, current_end = None, None
 
     return dict(total=total, best_count=best['contributionCount'], best_date=best['date'],
                 longest_len=longest_len, longest_start=longest_start, longest_end=longest_end,
                 current_len=current_len, current_start=current_start, current_end=current_end,
                 range_start=days[0]['date'], range_end=days[-1]['date'])
+
 
 
 def month_day(iso_date):
