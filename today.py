@@ -141,6 +141,20 @@ def formatter(query_type, difference, funct_return=False, whitespace=0):
     return funct_return
 
 
+def update_readme_cache_buster():
+    """Updates README.md with a Unix timestamp query parameter so GitHub Camo CDN proxy always purges cache."""
+    readme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'README.md')
+    if os.path.exists(readme_path):
+        with open(readme_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        import re
+        ts = int(time.time())
+        new_content = re.sub(r'card_dark\.svg\?v=\w+', f'card_dark.svg?v={ts}', content)
+        new_content = re.sub(r'card_light\.svg\?v=\w+', f'card_light.svg?v={ts}', new_content)
+        with open(readme_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+
+
 if __name__ == '__main__':
     print('Calculation times:')
     age_data, age_time = perf_counter(daily_readme, BIRTHDAY)
@@ -150,5 +164,6 @@ if __name__ == '__main__':
 
     svg_overwrite('card_dark.svg', age_data, weeks)
     svg_overwrite('card_light.svg', age_data, weeks)
+    update_readme_cache_buster()
 
     print('Total GitHub GraphQL API calls:', '{:>3}'.format(sum(QUERY_COUNT.values())))
