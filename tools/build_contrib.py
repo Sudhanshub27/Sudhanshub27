@@ -383,12 +383,25 @@ def render_chart(weeks, theme, tile_w, tile_h):
             minx, maxx = min(minx, px - 6), max(maxx, px + 6)
             miny, maxy = min(miny, py - 6), max(maxy, py + 6)
 
-            miny, maxy = min(miny, py - 6), max(maxy, py + 6)
+        # Vermilion Torii Gates framing the entrance (start) and exit (end) of the mountain path BEHIND trees
+        if len(path_line_pts) > 5:
+            # Entrance Torii Gate (Start of mountain path - Left)
+            ts_x, ts_y = path_line_pts[4]
+            torii_start_html = f'<g class="tree-node" style="animation-delay: 0.05s; transform-origin: {ts_x:.1f}px {ts_y:.1f}px;">{render_torii(ts_x, ts_y + 3.0, theme)}</g>'
+            parts.append(torii_start_html)
+
+            # Exit Torii Gate (End of mountain path - Right)
+            te_x, te_y = path_line_pts[-5]
+            torii_end_html = f'<g class="tree-node" style="animation-delay: 3.55s; transform-origin: {te_x:.1f}px {te_y:.1f}px;">{render_torii(te_x, te_y + 3.0, theme)}</g>'
+            parts.append(torii_end_html)
+
+            minx, maxx = min(minx, ts_x - 30, te_x - 30), max(maxx, ts_x + 30, te_x + 30)
+            miny, maxy = min(miny, ts_y - 50, te_y - 50), max(maxy, ts_y + 6, te_y + 6)
 
     # 3. Sort trees back-to-front by vertical position (pos_y) for proper occlusion
     day_nodes.sort(key=lambda item: item['pos_y'])
 
-    # 4. Render day nodes sequentially from left to right with staggered tree growth animation
+    # 4. Render day nodes sequentially from left to right with staggered tree growth animation (IN FRONT of Torii gates)
     for item in day_nodes:
         i = item['index']
         d = item['day']
@@ -536,22 +549,6 @@ def render_chart(weeks, theme, tile_w, tile_h):
             miny, maxy = min(miny, cy - R * 1.4), max(maxy, py)
 
         parts.append(f'<g class="tree-node" style="animation-delay: {delay:.2f}s; transform-origin: {px:.1f}px {py:.1f}px;">' + ''.join(node_parts) + '</g>')
-
-    # 5. Append Vermilion Torii Gates framing the entrance (start) and exit (end) of the mountain path
-    # Rendered after trees so Torii gates stand proudly in front of trees and are never hidden
-    if len(path_line_pts) > 5:
-        # Entrance Torii Gate (Start of mountain path - Left)
-        ts_x, ts_y = path_line_pts[4]
-        torii_start_html = f'<g class="tree-node" style="animation-delay: 0.05s; transform-origin: {ts_x:.1f}px {ts_y:.1f}px;">{render_torii(ts_x, ts_y + 3.0, theme)}</g>'
-        parts.append(torii_start_html)
-
-        # Exit Torii Gate (End of mountain path - Right)
-        te_x, te_y = path_line_pts[-5]
-        torii_end_html = f'<g class="tree-node" style="animation-delay: 3.55s; transform-origin: {te_x:.1f}px {te_y:.1f}px;">{render_torii(te_x, te_y + 3.0, theme)}</g>'
-        parts.append(torii_end_html)
-
-        minx, maxx = min(minx, ts_x - 30, te_x - 30), max(maxx, ts_x + 30, te_x + 30)
-        miny, maxy = min(miny, ts_y - 50, te_y - 50), max(maxy, ts_y + 6, te_y + 6)
 
     frag = f'<g transform="translate({-minx:.1f},{-miny:.1f})">' + ''.join(parts) + '</g>'
     return frag, maxx - minx, maxy - miny
