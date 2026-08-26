@@ -79,37 +79,45 @@ def render_lantern(px, py, theme):
 
 
 def render_torii(px, py, theme):
-    """Renders a vibrant Vermilion Japanese Torii gate framing the mountain path entrance/exit."""
+    """Renders a grand, majestic Vermilion Japanese Torii gate (~45px tall, ~52px wide) framing the mountain path entrance/exit."""
     parts = []
-    vermilion = '#E03E2D'   # Bright, traditional Vermilion Torii Red
-    dark_cap = '#140F18'    # Dark charcoal for base pads and top roof cap
+    vermilion = '#E03E2D'   # Bright traditional Vermilion Red
+    dark_cap = '#120D16'    # Dark charcoal for foundation pads and protective roof caps
     gold_accent = '#FFD700' # Golden plaque border accent
+    is_dark = theme.get('is_dark', True)
 
-    # Torii Gate (~24px tall, ~28px wide)
+    # Soft ambient glow outline for maximum contrast against trees
+    glow_color = '#000000' if is_dark else '#FFFFFF'
+    parts.append(f'<path d="M {px - 26.0:.1f},{py - 44.0:.1f} Q {px:.1f},{py - 41.0:.1f} {px + 26.0:.1f},{py - 44.0:.1f}" stroke="{glow_color}" stroke-width="5.0" stroke-linecap="round" fill="none" opacity="0.40"/>')
+
     # Base foundation pads (Koshimaki)
-    parts.append(f'<rect x="{px - 8.5:.1f}" y="{py - 2.0:.1f}" width="3.5" height="2.2" fill="{dark_cap}"/>')
-    parts.append(f'<rect x="{px + 5.0:.1f}" y="{py - 2.0:.1f}" width="3.5" height="2.2" fill="{dark_cap}"/>')
+    parts.append(f'<rect x="{px - 15.0:.1f}" y="{py - 3.5:.1f}" width="6.0" height="3.5" rx="0.5" fill="{dark_cap}"/>')
+    parts.append(f'<rect x="{px + 9.0:.1f}" y="{py - 3.5:.1f}" width="6.0" height="3.5" rx="0.5" fill="{dark_cap}"/>')
 
     # Main vertical pillars (Hashira) angled slightly inward
-    parts.append(f'<line x1="{px - 6.8:.1f}" y1="{py - 2.0:.1f}" x2="{px - 5.5:.1f}" y2="{py - 22.0:.1f}" stroke="{vermilion}" stroke-width="2.5" stroke-linecap="square"/>')
-    parts.append(f'<line x1="{px + 6.8:.1f}" y1="{py - 2.0:.1f}" x2="{px + 5.5:.1f}" y2="{py - 22.0:.1f}" stroke="{vermilion}" stroke-width="2.5" stroke-linecap="square"/>')
+    parts.append(f'<line x1="{px - 12.0:.1f}" y1="{py - 3.5:.1f}" x2="{px - 9.5:.1f}" y2="{py - 40.0:.1f}" stroke="{vermilion}" stroke-width="4.2" stroke-linecap="square"/>')
+    parts.append(f'<line x1="{px + 12.0:.1f}" y1="{py - 3.5:.1f}" x2="{px + 9.5:.1f}" y2="{py - 40.0:.1f}" stroke="{vermilion}" stroke-width="4.2" stroke-linecap="square"/>')
+
+    # Inner pillar shadow lines for 3D depth
+    parts.append(f'<line x1="{px - 10.2:.1f}" y1="{py - 3.5:.1f}" x2="{px - 8.0:.1f}" y2="{py - 40.0:.1f}" stroke="{dark_cap}" stroke-width="1.0" opacity="0.30"/>')
+    parts.append(f'<line x1="{px + 10.2:.1f}" y1="{py - 3.5:.1f}" x2="{px + 8.0:.1f}" y2="{py - 40.0:.1f}" stroke="{dark_cap}" stroke-width="1.0" opacity="0.30"/>')
 
     # Lower crossbar (Nuki) passing through pillars
-    parts.append(f'<line x1="{px - 10.5:.1f}" y1="{py - 14.5:.1f}" x2="{px + 10.5:.1f}" y2="{py - 14.5:.1f}" stroke="{vermilion}" stroke-width="2.0"/>')
+    parts.append(f'<line x1="{px - 19.0:.1f}" y1="{py - 26.0:.1f}" x2="{px + 19.0:.1f}" y2="{py - 26.0:.1f}" stroke="{vermilion}" stroke-width="3.4"/>')
 
     # Upper secondary crossbar (Shimaki)
-    parts.append(f'<line x1="{px - 9.5:.1f}" y1="{py - 20.0:.1f}" x2="{px + 9.5:.1f}" y2="{py - 20.0:.1f}" stroke="{vermilion}" stroke-width="2.0"/>')
+    parts.append(f'<line x1="{px - 17.0:.1f}" y1="{py - 36.5:.1f}" x2="{px + 17.0:.1f}" y2="{py - 36.5:.1f}" stroke="{vermilion}" stroke-width="3.4"/>')
 
     # Upper main curved lintel (Kasagi) with upturned ends
-    kasagi_d = f"M {px - 13.5:.1f},{py - 22.5:.1f} Q {px:.1f},{py - 21.0:.1f} {px + 13.5:.1f},{py - 22.5:.1f}"
-    parts.append(f'<path d="{kasagi_d}" stroke="{vermilion}" stroke-width="3.0" stroke-linecap="round" fill="none"/>')
+    kasagi_d = f"M {px - 25.0:.1f},{py - 41.5:.1f} Q {px:.1f},{py - 38.5:.1f} {px + 25.0:.1f},{py - 41.5:.1f}"
+    parts.append(f'<path d="{kasagi_d}" stroke="{vermilion}" stroke-width="5.0" stroke-linecap="round" fill="none"/>')
 
     # Top dark protective roof cap over Kasagi
-    cap_d = f"M {px - 14.0:.1f},{py - 24.0:.1f} Q {px:.1f},{py - 22.5:.1f} {px + 14.0:.1f},{py - 24.0:.1f}"
-    parts.append(f'<path d="{cap_d}" stroke="{dark_cap}" stroke-width="1.5" stroke-linecap="round" fill="none"/>')
+    cap_d = f"M {px - 26.0:.1f},{py - 44.0:.1f} Q {px:.1f},{py - 41.0:.1f} {px + 26.0:.1f},{py - 44.0:.1f}"
+    parts.append(f'<path d="{cap_d}" stroke="{dark_cap}" stroke-width="2.4" stroke-linecap="round" fill="none"/>')
 
     # Center vertical plaque strut (Gakuzuka) with gold accent border
-    parts.append(f'<rect x="{px - 1.5:.1f}" y="{py - 20.0:.1f}" width="3.0" height="5.5" fill="{dark_cap}" stroke="{gold_accent}" stroke-width="0.4"/>')
+    parts.append(f'<rect x="{px - 2.8:.1f}" y="{py - 36.5:.1f}" width="5.6" height="10.0" fill="{dark_cap}" stroke="{gold_accent}" stroke-width="0.8"/>')
 
     return ''.join(parts)
 
@@ -533,17 +541,17 @@ def render_chart(weeks, theme, tile_w, tile_h):
     # Rendered after trees so Torii gates stand proudly in front of trees and are never hidden
     if len(path_line_pts) > 5:
         # Entrance Torii Gate (Start of mountain path - Left)
-        ts_x, ts_y = path_line_pts[2]
-        torii_start_html = f'<g class="tree-node" style="animation-delay: 0.05s; transform-origin: {ts_x:.1f}px {ts_y:.1f}px;">{render_torii(ts_x, ts_y + 2.0, theme)}</g>'
+        ts_x, ts_y = path_line_pts[4]
+        torii_start_html = f'<g class="tree-node" style="animation-delay: 0.05s; transform-origin: {ts_x:.1f}px {ts_y:.1f}px;">{render_torii(ts_x, ts_y + 3.0, theme)}</g>'
         parts.append(torii_start_html)
 
         # Exit Torii Gate (End of mountain path - Right)
-        te_x, te_y = path_line_pts[-3]
-        torii_end_html = f'<g class="tree-node" style="animation-delay: 3.55s; transform-origin: {te_x:.1f}px {te_y:.1f}px;">{render_torii(te_x, te_y + 2.0, theme)}</g>'
+        te_x, te_y = path_line_pts[-5]
+        torii_end_html = f'<g class="tree-node" style="animation-delay: 3.55s; transform-origin: {te_x:.1f}px {te_y:.1f}px;">{render_torii(te_x, te_y + 3.0, theme)}</g>'
         parts.append(torii_end_html)
 
-        minx, maxx = min(minx, ts_x - 16, te_x - 16), max(maxx, ts_x + 16, te_x + 16)
-        miny, maxy = min(miny, ts_y - 28, te_y - 28), max(maxy, ts_y + 4, te_y + 4)
+        minx, maxx = min(minx, ts_x - 30, te_x - 30), max(maxx, ts_x + 30, te_x + 30)
+        miny, maxy = min(miny, ts_y - 50, te_y - 50), max(maxy, ts_y + 6, te_y + 6)
 
     frag = f'<g transform="translate({-minx:.1f},{-miny:.1f})">' + ''.join(parts) + '</g>'
     return frag, maxx - minx, maxy - miny
