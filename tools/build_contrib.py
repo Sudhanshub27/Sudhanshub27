@@ -358,8 +358,21 @@ def render_chart(weeks, theme, tile_w, tile_h):
         day_nodes.append({'index': i, 'day': d, 'pos_x': pos_x, 'pos_y': pos_y, 'y_base': y_base})
 
     parts = []
-    parts.append('<defs><style>')
+    parts.append('<defs>')
+    parts.append('<clipPath id="road_clip">')
+    parts.append('  <rect x="-100" y="-100" width="0" height="500" class="road-revealer">')
+    parts.append('    <animate attributeName="width" from="0" to="1000" dur="3.5s" fill="freeze" calcMode="linear"/>')
+    parts.append('  </rect>')
+    parts.append('</clipPath>')
+    parts.append('<style>')
     parts.append('''
+@keyframes drawRoadPath {
+  0% { width: 0px; }
+  100% { width: 1000px; }
+}
+.road-revealer {
+  animation: drawRoadPath 3.5s linear forwards;
+}
 @keyframes growTree {
   0% { opacity: 0; transform: scale(0); }
   70% { opacity: 1; transform: scale(1.15); }
@@ -374,11 +387,13 @@ def render_chart(weeks, theme, tile_w, tile_h):
     minx = miny = float('inf')
     maxx = maxy = float('-inf')
 
-    # 2. Draw the winding mountain road line
+    # 2. Draw the winding mountain road line (wrapped in road_clip for progressive left-to-right road drawing)
     if path_line_pts:
         d_str = "M " + " L ".join(f"{px:.1f},{py:.1f}" for px, py in path_line_pts)
+        parts.append('<g clip-path="url(#road_clip)">')
         parts.append(f'<path d="{d_str}" stroke="{path_color}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.65"/>')
         parts.append(f'<path d="{d_str}" stroke="{theme["border"]}" stroke-width="1.2" stroke-dasharray="3,4" fill="none" opacity="0.35"/>')
+        parts.append('</g>')
         for px, py in path_line_pts:
             minx, maxx = min(minx, px - 6), max(maxx, px + 6)
             miny, maxy = min(miny, py - 6), max(maxy, py + 6)
