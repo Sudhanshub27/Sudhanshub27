@@ -310,8 +310,6 @@ def render_falling_petals(theme, chart_w, panel_h):
         )
 
     return ''.join(parts)
-
-
 def render_chart(weeks, theme, tile_w, tile_h):
     """Renders the calendar as a Sakura forest along an S-curve switchback path using 4 discrete growth tiers."""
     all_days = [d for w in weeks for d in w['contributionDays']]
@@ -351,6 +349,19 @@ def render_chart(weeks, theme, tile_w, tile_h):
         day_nodes.append({'index': i, 'day': d, 'pos_x': pos_x, 'pos_y': pos_y, 'y_base': y_base})
 
     parts = []
+    parts.append('<defs><style>')
+    parts.append('''
+@keyframes growTree {
+  0% { opacity: 0; transform: scale(0); }
+  70% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.tree-node {
+  animation: growTree 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+''')
+    parts.append('</style></defs>')
+
     minx = miny = float('inf')
     maxx = maxy = float('-inf')
 
@@ -363,28 +374,36 @@ def render_chart(weeks, theme, tile_w, tile_h):
             minx, maxx = min(minx, px - 6), max(maxx, px + 6)
             miny, maxy = min(miny, py - 6), max(maxy, py + 6)
 
-        # Vermilion Torii Gate framing the entrance of the mountain path
-        if len(path_line_pts) > 3:
-            t_x, t_y = path_line_pts[3]
-            parts.append(render_torii(t_x + 2.0, t_y + 4.0, theme))
+        # Vermilion Torii Gates framing the entrance (start) and exit (end) of the mountain path
+        if len(path_line_pts) > 5:
+            # Entrance Torii Gate (Start of path)
+            ts_x, ts_y = path_line_pts[3]
+            parts.append(f'<g class="tree-node" style="animation-delay: 0.05s; transform-origin: {ts_x + 2.0:.1f}px {ts_y + 4.0:.1f}px;">{render_torii(ts_x + 2.0, ts_y + 4.0, theme)}</g>')
+
+            # Exit Torii Gate (End of path)
+            te_x, te_y = path_line_pts[-4]
+            parts.append(f'<g class="tree-node" style="animation-delay: 3.55s; transform-origin: {te_x - 2.0:.1f}px {te_y + 4.0:.1f}px;">{render_torii(te_x - 2.0, te_y + 4.0, theme)}</g>')
 
     # 3. Sort trees back-to-front by vertical position (pos_y) for proper occlusion
     day_nodes.sort(key=lambda item: item['pos_y'])
 
-    # 4. Render day nodes using 4 discrete growth tiers based on commit count
+    # 4. Render day nodes sequentially from left to right with staggered tree growth animation
     for item in day_nodes:
         i = item['index']
         d = item['day']
         px, py = item['pos_x'], item['pos_y']
         c = d['contributionCount']
 
+        delay = (i / max(1, N - 1)) * 3.5
+        node_parts = []
+
         # Japanese stone lanterns (Tōrō) along roadside
         if i in (18, 72, 135, 205, 270, 330):
-            parts.append(render_lantern(px + 9.0, py + 2.0, theme))
+            node_parts.append(render_lantern(px + 9.0, py + 2.0, theme))
 
         if c == 0:
             # Empty day: small faint dot on path
-            parts.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="1.5" fill="{theme["empty"]}" opacity="0.75"/>')
+            node_parts.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="1.5" fill="{theme["empty"]}" opacity="0.75"/>')
             minx, maxx = min(minx, px - 2), max(maxx, px + 2)
             miny, maxy = min(miny, py - 2), max(maxy, py + 2)
         elif c in (1, 2):
@@ -392,13 +411,13 @@ def render_chart(weeks, theme, tile_w, tile_h):
             # Thin single trunk (width 1.0, no branches), 2-3 small light circles (#F5D6B8)
             trunk_h = 10.0
             tx, ty = px, py - trunk_h
-            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
 
             cx, cy = tx, ty - 2.5
             color_1 = ramp[0]  # #F5D6B8
-            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.8" fill="{color_1}" opacity="0.90"/>')
-            parts.append(f'<circle cx="{cx - 2.2:.1f}" cy="{cy + 1.0:.1f}" r="3.0" fill="{color_1}" opacity="0.85"/>')
-            parts.append(f'<circle cx="{cx + 2.2:.1f}" cy="{cy - 0.8:.1f}" r="2.8" fill="{color_1}" opacity="0.85"/>')
+            node_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.8" fill="{color_1}" opacity="0.90"/>')
+            node_parts.append(f'<circle cx="{cx - 2.2:.1f}" cy="{cy + 1.0:.1f}" r="3.0" fill="{color_1}" opacity="0.85"/>')
+            node_parts.append(f'<circle cx="{cx + 2.2:.1f}" cy="{cy - 0.8:.1f}" r="2.8" fill="{color_1}" opacity="0.85"/>')
 
             minx, maxx = min(minx, cx - 6), max(maxx, cx + 6)
             miny, maxy = min(miny, cy - 6), max(maxy, py)
@@ -407,21 +426,21 @@ def render_chart(weeks, theme, tile_w, tile_h):
             # Trunk width 1.4, 1-2 branch lines, canopy 4-5 circles in looser cluster (#E8946B)
             trunk_h = 16.0
             tx, ty = px, py - trunk_h
-            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="1.4" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="1.4" stroke-linecap="round"/>')
 
             b1_y = py - trunk_h * 0.50
-            parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - 4.2:.1f}" y2="{b1_y - 2.8:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - 4.2:.1f}" y2="{b1_y - 2.8:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
             b2_y = py - trunk_h * 0.70
-            parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + 3.8:.1f}" y2="{b2_y - 2.2:.1f}" stroke="{trunk_color}" stroke-width="0.9" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + 3.8:.1f}" y2="{b2_y - 2.2:.1f}" stroke="{trunk_color}" stroke-width="0.9" stroke-linecap="round"/>')
 
             cx, cy = tx, ty - 3.2
             c_primary = ramp[1]     # #E8946B
             c_highlight = ramp[0]   # #F5D6B8
-            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="5.2" fill="{c_primary}" opacity="0.92"/>')
-            parts.append(f'<circle cx="{cx - 3.2:.1f}" cy="{cy - 1.2:.1f}" r="4.0" fill="{c_highlight}" opacity="0.90"/>')
-            parts.append(f'<circle cx="{cx + 3.5:.1f}" cy="{cy - 0.8:.1f}" r="3.8" fill="{c_primary}" opacity="0.90"/>')
-            parts.append(f'<circle cx="{cx - 1.8:.1f}" cy="{cy + 2.2:.1f}" r="3.5" fill="{c_primary}" opacity="0.88"/>')
-            parts.append(f'<circle cx="{cx + 2.0:.1f}" cy="{cy + 1.8:.1f}" r="3.2" fill="{c_highlight}" opacity="0.88"/>')
+            node_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="5.2" fill="{c_primary}" opacity="0.92"/>')
+            node_parts.append(f'<circle cx="{cx - 3.2:.1f}" cy="{cy - 1.2:.1f}" r="4.0" fill="{c_highlight}" opacity="0.90"/>')
+            node_parts.append(f'<circle cx="{cx + 3.5:.1f}" cy="{cy - 0.8:.1f}" r="3.8" fill="{c_primary}" opacity="0.90"/>')
+            node_parts.append(f'<circle cx="{cx - 1.8:.1f}" cy="{cy + 2.2:.1f}" r="3.5" fill="{c_primary}" opacity="0.88"/>')
+            node_parts.append(f'<circle cx="{cx + 2.0:.1f}" cy="{cy + 1.8:.1f}" r="3.2" fill="{c_highlight}" opacity="0.88"/>')
 
             minx, maxx = min(minx, cx - 8), max(maxx, cx + 8)
             miny, maxy = min(miny, cy - 8), max(maxy, py)
@@ -430,14 +449,14 @@ def render_chart(weeks, theme, tile_w, tile_h):
             # Trunk width 2.0, 2-3 branches, canopy 7-9 circles in fuller dense ring + core (#C85A3D)
             trunk_h = 22.0
             tx, ty = px, py - trunk_h
-            parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="2.0" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{tx:.1f}" y2="{ty:.1f}" stroke="{trunk_color}" stroke-width="2.0" stroke-linecap="round"/>')
 
             b1_y = py - trunk_h * 0.45
-            parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - 6.2:.1f}" y2="{b1_y - 3.8:.1f}" stroke="{trunk_color}" stroke-width="1.3" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{b1_y:.1f}" x2="{px - 6.2:.1f}" y2="{b1_y - 3.8:.1f}" stroke="{trunk_color}" stroke-width="1.3" stroke-linecap="round"/>')
             b2_y = py - trunk_h * 0.65
-            parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + 5.8:.1f}" y2="{b2_y - 3.2:.1f}" stroke="{trunk_color}" stroke-width="1.2" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{b2_y:.1f}" x2="{px + 5.8:.1f}" y2="{b2_y - 3.2:.1f}" stroke="{trunk_color}" stroke-width="1.2" stroke-linecap="round"/>')
             b3_y = py - trunk_h * 0.82
-            parts.append(f'<line x1="{px:.1f}" y1="{b3_y:.1f}" x2="{px - 4.8:.1f}" y2="{b3_y - 2.4:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{px:.1f}" y1="{b3_y:.1f}" x2="{px - 4.8:.1f}" y2="{b3_y - 2.4:.1f}" stroke="{trunk_color}" stroke-width="1.0" stroke-linecap="round"/>')
 
             cx, cy = tx, ty - 4.0
             R = 8.2
@@ -452,11 +471,11 @@ def render_chart(weeks, theme, tile_w, tile_h):
                 oy = cy + R * 0.58 * math.sin(angle)
                 orad = R * (0.38 + math.cos(k * 2.1 + i) * 0.08)
                 color_k = c_primary if oy >= cy else c_mid
-                parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color_k}" opacity="0.90"/>')
+                node_parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color_k}" opacity="0.90"/>')
 
-            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{R*0.40:.1f}" fill="{c_deep}" opacity="0.95"/>')
-            parts.append(f'<circle cx="{cx - 1.8:.1f}" cy="{cy - 1.2:.1f}" r="{R*0.34:.1f}" fill="{c_primary}" opacity="0.95"/>')
-            parts.append(f'<circle cx="{cx + 1.8:.1f}" cy="{cy + 0.8:.1f}" r="{R*0.32:.1f}" fill="{c_mid}" opacity="0.95"/>')
+            node_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{R*0.40:.1f}" fill="{c_deep}" opacity="0.95"/>')
+            node_parts.append(f'<circle cx="{cx - 1.8:.1f}" cy="{cy - 1.2:.1f}" r="{R*0.34:.1f}" fill="{c_primary}" opacity="0.95"/>')
+            node_parts.append(f'<circle cx="{cx + 1.8:.1f}" cy="{cy + 0.8:.1f}" r="{R*0.32:.1f}" fill="{c_mid}" opacity="0.95"/>')
 
             minx, maxx = min(minx, cx - R * 1.3), max(maxx, cx + R * 1.3)
             miny, maxy = min(miny, cy - R * 1.3), max(maxy, py)
@@ -472,14 +491,14 @@ def render_chart(weeks, theme, tile_w, tile_h):
             tx = px + bend_amount * 0.6
             ty = py - trunk_h
 
-            parts.append(f'<path d="M {px:.1f},{py:.1f} Q {mid_x:.1f},{mid_y:.1f} {tx:.1f},{ty:.1f}" stroke="{trunk_color}" stroke-width="2.8" stroke-linecap="round" fill="none"/>')
+            node_parts.append(f'<path d="M {px:.1f},{py:.1f} Q {mid_x:.1f},{mid_y:.1f} {tx:.1f},{ty:.1f}" stroke="{trunk_color}" stroke-width="2.8" stroke-linecap="round" fill="none"/>')
 
             b1_x, b1_y = px + bend_amount * 0.4, py - trunk_h * 0.40
-            parts.append(f'<line x1="{b1_x:.1f}" y1="{b1_y:.1f}" x2="{b1_x - 7.5*bend_dir:.1f}" y2="{b1_y - 4.5:.1f}" stroke="{trunk_color}" stroke-width="1.6" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{b1_x:.1f}" y1="{b1_y:.1f}" x2="{b1_x - 7.5*bend_dir:.1f}" y2="{b1_y - 4.5:.1f}" stroke="{trunk_color}" stroke-width="1.6" stroke-linecap="round"/>')
             b2_x, b2_y = px + bend_amount * 0.6, py - trunk_h * 0.62
-            parts.append(f'<line x1="{b2_x:.1f}" y1="{b2_y:.1f}" x2="{b2_x + 7.0*bend_dir:.1f}" y2="{b2_y - 4.0:.1f}" stroke="{trunk_color}" stroke-width="1.4" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{b2_x:.1f}" y1="{b2_y:.1f}" x2="{b2_x + 7.0*bend_dir:.1f}" y2="{b2_y - 4.0:.1f}" stroke="{trunk_color}" stroke-width="1.4" stroke-linecap="round"/>')
             b3_x, b3_y = px + bend_amount * 0.8, py - trunk_h * 0.80
-            parts.append(f'<line x1="{b3_x:.1f}" y1="{b3_y:.1f}" x2="{b3_x - 6.0*bend_dir:.1f}" y2="{b3_y - 3.2:.1f}" stroke="{trunk_color}" stroke-width="1.2" stroke-linecap="round"/>')
+            node_parts.append(f'<line x1="{b3_x:.1f}" y1="{b3_y:.1f}" x2="{b3_x - 6.0*bend_dir:.1f}" y2="{b3_y - 3.2:.1f}" stroke="{trunk_color}" stroke-width="1.2" stroke-linecap="round"/>')
 
             cx, cy = tx, ty - 4.8
             R = 11.5
@@ -496,24 +515,26 @@ def render_chart(weeks, theme, tile_w, tile_h):
                 color_k = c_deep if oy >= cy else c_mid
                 if k % 4 == 0:
                     color_k = c_light
-                parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color_k}" opacity="0.92"/>')
+                node_parts.append(f'<circle cx="{ox:.1f}" cy="{oy:.1f}" r="{orad:.1f}" fill="{color_k}" opacity="0.92"/>')
 
-            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{R*0.42:.1f}" fill="{c_deep}" opacity="0.95"/>')
-            parts.append(f'<circle cx="{cx - 2.8:.1f}" cy="{cy - 1.8:.1f}" r="{R*0.35:.1f}" fill="{c_mid}" opacity="0.95"/>')
-            parts.append(f'<circle cx="{cx + 2.8:.1f}" cy="{cy - 0.8:.1f}" r="{R*0.34:.1f}" fill="{c_deep}" opacity="0.95"/>')
-            parts.append(f'<circle cx="{cx:.1f}" cy="{cy + 2.2:.1f}" r="{R*0.30:.1f}" fill="{c_mid}" opacity="0.95"/>')
+            node_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{R*0.42:.1f}" fill="{c_deep}" opacity="0.95"/>')
+            node_parts.append(f'<circle cx="{cx - 2.8:.1f}" cy="{cy - 1.8:.1f}" r="{R*0.35:.1f}" fill="{c_mid}" opacity="0.95"/>')
+            node_parts.append(f'<circle cx="{cx + 2.8:.1f}" cy="{cy - 0.8:.1f}" r="{R*0.34:.1f}" fill="{c_deep}" opacity="0.95"/>')
+            node_parts.append(f'<circle cx="{cx:.1f}" cy="{cy + 2.2:.1f}" r="{R*0.30:.1f}" fill="{c_mid}" opacity="0.95"/>')
 
             # Floating petal dots (ONLY tier 4 gets floating petals)
             p_color = ramp[0]  # #F5D6B8
             p1_x, p1_y = cx + R * 0.75, cy - R * 1.12
             p2_x, p2_y = cx - R * 0.85, cy - R * 0.92
             p3_x, p3_y = cx + R * 1.10, cy - R * 0.42
-            parts.append(f'<circle cx="{p1_x:.1f}" cy="{p1_y:.1f}" r="1.3" fill="{p_color}" opacity="0.88"/>')
-            parts.append(f'<circle cx="{p2_x:.1f}" cy="{p2_y:.1f}" r="1.0" fill="{p_color}" opacity="0.78"/>')
-            parts.append(f'<circle cx="{p3_x:.1f}" cy="{p3_y:.1f}" r="1.1" fill="{p_color}" opacity="0.68"/>')
+            node_parts.append(f'<circle cx="{p1_x:.1f}" cy="{p1_y:.1f}" r="1.3" fill="{p_color}" opacity="0.88"/>')
+            node_parts.append(f'<circle cx="{p2_x:.1f}" cy="{p2_y:.1f}" r="1.0" fill="{p_color}" opacity="0.78"/>')
+            node_parts.append(f'<circle cx="{p3_x:.1f}" cy="{p3_y:.1f}" r="1.1" fill="{p_color}" opacity="0.68"/>')
 
             minx, maxx = min(minx, cx - R * 1.4), max(maxx, cx + R * 1.4)
             miny, maxy = min(miny, cy - R * 1.4), max(maxy, py)
+
+        parts.append(f'<g class="tree-node" style="animation-delay: {delay:.2f}s; transform-origin: {px:.1f}px {py:.1f}px;">' + ''.join(node_parts) + '</g>')
 
     frag = f'<g transform="translate({-minx:.1f},{-miny:.1f})">' + ''.join(parts) + '</g>'
     return frag, maxx - minx, maxy - miny
