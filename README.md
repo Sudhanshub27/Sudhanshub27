@@ -1,6 +1,6 @@
 <a href="https://github.com/Sudhanshub27/Sudhanshub27">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="card_dark.svg?v=1792046807">
-    <img alt="Sudhanshu Batra's GitHub Profile README" src="card_light.svg?v=1792046807">
+    <source media="(prefers-color-scheme: dark)" srcset="card_dark.svg?v=1792066823">
+    <img alt="Sudhanshu Batra's GitHub Profile README" src="card_light.svg?v=1792066823">
   </picture>
 </a>
